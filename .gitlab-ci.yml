@@ -1,0 +1,59 @@
+variables:
+  BACKEND_IMAGE: registry.gitlab.com/dci-project/arqsoft-dci/proyectos/1s2024/sporttime/stime-api-user:latest
+  BACKEND_ADMIN_IMAGE: registry.gitlab.com/dci-project/arqsoft-dci/proyectos/1s2024/sporttime/stime-api-admin:latest
+  FRONTEND_ADMIN_IMAGE: registry.gitlab.com/dci-project/arqsoft-dci/proyectos/1s2024/sporttime/stime-ui-admin:latest
+
+stages:
+  - prepare-app-dev
+  - build-app-dev
+  - deploy-app-dev
+
+prepare:
+  stage: prepare-app-dev
+  script:
+    - touch .env
+    - echo "GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID >> .env
+    - echo "GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET >> .env
+    - echo "POSTGRESQL_DB_NAME="$POSTGRESQL_DB_NAME >> .env
+    - echo "POSTGRESQL_USERNAME="$POSTGRESQL_USERNAME >> .env
+    - echo "POSTGRESQL_PASSWORD="$POSTGRESQL_PASSWORD >> .env
+    - echo "POSTGRESQL_HOST="db >> .env
+    - echo "POSTGRESQL_PORT="5432 >> .env
+  artifacts:
+    paths:
+      - .env
+
+build-backend:
+  stage: build-app-dev
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $BACKEND_IMAGE .
+    - docker push $BACKEND_IMAGE
+  only:
+    - develop
+
+deploy-dev:
+  stage: deploy-app-dev
+  only:
+    - develop
+  before_script:
+    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $SERVER_IP_DEV >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - scp docker-compose.yml $SERVER_USER_DEV@$SERVER_IP_DEV:$SERVER_PATH
+    - scp .env $SERVER_USER_DEV@$SERVER_IP_DEV:$SERVER_PATH
+    - ssh $SERVER_USER_DEV@$SERVER_IP_DEV "docker login -u \"$CI_REGISTRY_USER\" -p \"$CI_REGISTRY_PASSWORD\" $CI_REGISTRY"
+    - ssh $SERVER_USER_DEV@$SERVER_IP_DEV "cd $SERVER_PATH && docker-compose --profile api-user down && docker system prune -f"
+    - ssh $SERVER_USER_DEV@$SERVER_IP_DEV "docker rmi \$(docker images -q | grep -v \$(docker images -q | grep -E 'postgres:16|$FRONTEND_ADMIN_IMAGE|$BACKEND_ADMIN_IMAGE')) -f" || true
+    - ssh $SERVER_USER_DEV@$SERVER_IP_DEV "docker network create stime-network || true"
+    - ssh $SERVER_USER_DEV@$SERVER_IP_DEV "docker pull \"$BACKEND_IMAGE\""
+    - ssh $SERVER_USER_DEV@$SERVER_IP_DEV "cd $SERVER_PATH && docker-compose --profile api-user pull && docker-compose --profile api-user up -d"
+    - ssh $SERVER_USER_DEV@$SERVER_IP_DEV "rm -rf $SERVER_PATH/docker-compose.yml"
