@@ -1,14 +1,14 @@
-import { Column, CreateDateColumn, Double, Entity, IntegerType, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Sport } from "../enums/sport.enum";
-import { User } from "src/user/entities/user.entity";
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "../../user/entities/user.entity";
 import { Player } from "./player.entity";
+import { Type } from "../enums/type.enum";
 
 /*
-  Entidad que representa a un partido del sistema.
+  Entidad que representa una partida del sistema.
 */
 
-@Entity({ name: 'matches' })
-export class Match {
+@Entity({ name: 'games' })
+export class Game {
 
   @PrimaryGeneratedColumn()
   id: number;
@@ -40,10 +40,10 @@ export class Match {
   @Column({ type: 'int' })
   totalPlayers: number;
 
-  @Column({ type: 'enum', enum: Sport })
-  sport: Sport;
+  @Column({ type: 'enum', enum: Type })
+  type: Type;
 
-  @ManyToOne(() => User, (user) => user.matches)
+  @ManyToOne(() => User, (user) => user.games)
   user: User;
 
   @OneToMany(() => Player, (player) => player.user)

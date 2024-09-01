@@ -1,8 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { MatchService } from 'src/match/match.service';
 
 /*
   Controlador que maneja las solicitudes HTTP para la gestión de usuarios.
@@ -16,7 +15,6 @@ export class UserController {
   */
   constructor(
     private readonly userService: UserService,
-    private readonly matchService: MatchService
   ) { }
 
   /**

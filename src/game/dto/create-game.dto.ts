@@ -1,10 +1,10 @@
 import { IsString, IsInt, IsNumber, IsEnum, Min, MinLength, MaxLength } from 'class-validator';
-import { Sport } from '../enums/sport.enum';
+import { Type } from '../enums/type.enum';
 
 /*
   Clase que representa los valores obligatorios que se deben obtener para crear un partido.
 */
-export class CreateMatchDto {
+export class CreateGameDto {
 
   @MinLength(3)
   @IsString()
@@ -40,6 +40,6 @@ export class CreateMatchDto {
   @IsInt()
   totalPlayers: number;
 
-  @IsEnum(Sport)
-  sport: Sport;
+  @IsEnum(Type)
+  sport: Type;
 }

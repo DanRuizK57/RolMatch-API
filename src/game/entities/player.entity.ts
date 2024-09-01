@@ -1,9 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
-import { Match } from 'src/match/entities/match.entity';
+import { Game } from './game.entity';
 
 /*
-  Entidad que representa a un usuario que pertenece a un partido del sistema.
+  Entidad que representa a un usuario que pertenece a una partida del sistema.
 */
 
 @Entity({ name: 'players' })
@@ -14,6 +14,6 @@ export class Player {
   @ManyToOne(() => User, (user) => user.players)
   user: User;
 
-  @ManyToOne(() => Match, (match) => match.players)
-  match: Match;
+  @ManyToOne(() => Game, (game) => game.players)
+  game: Game;
 }

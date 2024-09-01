@@ -1,7 +1,7 @@
-import { Match } from "src/match/entities/match.entity";
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Player } from "../../match/entities/player.entity";
+import { Player } from "../../game/entities/player.entity";
 import { Medal } from "./medal.entity";
+import { Game } from "src/game/entities/game.entity";
 
 /*
   Entidad que representa a un usuario del sistema.
@@ -33,8 +33,8 @@ export class User {
     @Column({ type: 'int', default: 0})
     reports: number;
   
-    @OneToMany(() => Match, (match) => match.user)
-    matches: Match[];
+    @OneToMany(() => Game, (game) => game.user)
+    games: Game[];
 
     @OneToMany(() => Player, (player) => player.user)
     players: Player[];
