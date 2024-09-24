@@ -136,38 +136,37 @@ describe('UserService', () => {
     });
 
   });
-    
-
-
 
   // ############################## Tests para findByEmail() ################################################
-//   describe('findByEmail', () => {
+  describe('findByEmail', () => {
 
-//     it('debería retornar un usuario con el email señalado', async () => {
-//       const email = 'john.doe@example.com';
+    it('debería retornar un usuario con el email señalado', async () => {
+      const email = 'john.doe@example.com';
 
-//       const mockedUser: User = Object.assign(new User(), {
-//         id: 1,
-//         name: 'John Doe',
-//         email: 'john.doe@example.com',
-//       });
+      const mockedUser: User = Object.assign(new User(), {
+        id: 1,
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        picture: ''
+      });
 
-//       jest.spyOn(service, 'findByEmail').mockResolvedValue(mockedUser);
+      jest.spyOn(service, 'findByEmail').mockResolvedValue(mockedUser);
 
-//       const user = await service.findByEmail(email);
+      const user = await service.findByEmail(email);
 
-//       expect(user).toEqual(mockedUser);
-//     });
+      expect(user).toEqual(mockedUser);
+    });
       
-//     it('debería lanzar NotFoundException si no se encuentra un usuario con ese correo', async () => {
-//       const email = 'email@ejemplo.com';
+    it('debería lanzar NotFoundException si no se encuentra un usuario con ese correo', async () => {
+      const email = 'email@ejemplo.com';
 
-//       jest.spyOn(service, 'findByEmail').mockRejectedValue(new NotFoundException(`User with email ${email} not found!`));
+      jest.spyOn(service, 'findByEmail').mockRejectedValue(new NotFoundException(`User with email ${email} not found!`));
 
-//       await expect(service.findByEmail(email)).rejects.toThrow(NotFoundException);
-//     });
+      await expect(service.findByEmail(email)).rejects.toThrow(NotFoundException);
+    });
 
-//   });
+  });
 
 
 });
