@@ -29,9 +29,15 @@ describe('UserService', () => {
 
     // Mock del método findAll
     jest.spyOn(service, 'findAll').mockImplementation(async () => [
-      Object.assign(new User(), { id: 1, name: 'John Doe', email: 'john.doe@example.com' }),
-      Object.assign(new User(), { id: 2, name: 'Jane Doe', email: 'jane.doe@example.com' }),
+      Object.assign(new User(), { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '' }),
+      Object.assign(new User(), { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' }),
     ]);
+      
+    // Mock del método findOne
+    jest.spyOn(service, 'findOne').mockImplementation(async () =>
+      Object.assign(new User(), { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '' })
+    );
+
 
   });
     
@@ -69,8 +75,8 @@ describe('UserService', () => {
     it('debería retornar un array de usuarios', async () => {
       const result = await service.findAll();
       expect(result).toEqual([
-        { id: 1, name: 'John Doe', email: 'john.doe@example.com' },
-        { id: 2, name: 'Jane Doe', email: 'jane.doe@example.com' },
+        { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '' },
+        { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
       ]);
     });
 
@@ -98,6 +104,39 @@ describe('UserService', () => {
     });
 
   });
+    
+  // ############################## Tests para findOne() ####################################################
+  describe('findOne', () => {
+    it('debería retornar al usuario con ID 1', async () => {
+      const userId = 1;
+      const user: User = await service.findOne(userId);
+
+      await expect(user).toEqual({ id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '' });
+    });
+
+    it('debería retornar un error al enviar un número menor a 1', async () => {
+      const userId = -3;
+
+        // Establece el mock para que `findOne` del servicio lance una excepción
+      jest.spyOn(service, 'findOne').mockImplementation(async (id: number) => {
+        if (id <= 0) {
+          throw new BadRequestException('ID must be greather than 0!');
+        }
+        return { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '' } as User;
+      });
+
+      await expect(service.findOne(userId)).rejects.toThrow(BadRequestException);
+    });
+
+    it('debería lanzar NotFoundException si el servicio retorna undefined', async () => {
+      const userId = 999;
+      jest.spyOn(service, 'findOne').mockRejectedValue(new NotFoundException(`User with ID ${userId} not found!`));
+
+      await expect(service.findOne(userId)).rejects.toThrow(NotFoundException);
+    });
+
+  });
+
 
   // ############################## Tests para findByEmail() ################################################
 //   describe('findByEmail', () => {
