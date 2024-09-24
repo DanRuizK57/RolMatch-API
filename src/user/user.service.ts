@@ -4,7 +4,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import { Medal } from './entities/medal.entity';
 
 /*
     Servicio que gestiona las funciones de gestión de usuarios.
@@ -18,8 +17,6 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(Medal)
-    private readonly medalsRepository: Repository<Medal>
   ) { }
 
   /**
@@ -46,15 +43,7 @@ export class UserService {
    * @returns Usuario encontrado.
    */
   async findOne(id: number) {
-    return await this.usersRepository.findOne({
-      where: { id },
-      relations: ['medals'],
-      order: {
-          medals: {
-              id: 'ASC'
-          }
-        }
-    });
+    return await this.usersRepository.findOne({ where: { id } });
   }
 
   /**
@@ -97,36 +86,4 @@ export class UserService {
     return await this.usersRepository.save(userToReport);;
   }
 
-  /**
-   * Recomendar a un usuario por su id.
-   * @param userId - Identificador del usuario a recomendar.
-   * @returns Usuario recomendado.
-   */
-   async recommend(userId: number): Promise<void> {
-     const user = await this.findOne(+userId);
-     console.log(user.id);
-     
-
-      // Validar que el usuario existe
-      if (!user) {
-          throw new Error('User not found');
-      }
-
-      user.recommendations += 1;
-
-      //Cantidad de recomendaciones necesarias para ganar una medalla
-      const medalLevels = [1, 5, 10, 25, 50, 100];
-
-      if (medalLevels.includes(user.recommendations)) {
-          const medal = new Medal();
-          medal.level = user.recommendations;
-          medal.description = `${user.recommendations} Recomendaciones`;
-          medal.user = user;
-
-        user.medals.push(medal);
-        await this.medalsRepository.save(medal);
-     }
-
-      await this.usersRepository.save(user);
-    }
 }
