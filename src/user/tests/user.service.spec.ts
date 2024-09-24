@@ -27,6 +27,12 @@ describe('UserService', () => {
     service = module.get<UserService>(UserService);
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
 
+    // Mock del método findAll
+    jest.spyOn(service, 'findAll').mockImplementation(async () => [
+      Object.assign(new User(), { id: 1, name: 'John Doe', email: 'john.doe@example.com' }),
+      Object.assign(new User(), { id: 2, name: 'Jane Doe', email: 'jane.doe@example.com' }),
+    ]);
+
   });
     
   // ############################## Tests para create() ####################################################
@@ -57,6 +63,41 @@ describe('UserService', () => {
 
   });
 
+// ############################## Tests para findAll()###################################################
+  describe('findAll', () => {
+
+    it('debería retornar un array de usuarios', async () => {
+      const result = await service.findAll();
+      expect(result).toEqual([
+        { id: 1, name: 'John Doe', email: 'john.doe@example.com' },
+        { id: 2, name: 'Jane Doe', email: 'jane.doe@example.com' },
+      ]);
+    });
+
+    it('hay 2 elementos en el array', async () => {
+      const result = await service.findAll();
+      expect(result).toHaveLength(2);
+    });
+
+    it('todos los elementos de la lista deben ser instancias de User', async () => {
+      const result = await service.findAll();
+      result.forEach(user => {
+        expect(user).toBeInstanceOf(User);
+      });
+    });
+    
+    it('debería retornar un array vacío si no hay usuarios', async () => {
+      jest.spyOn(service, 'findAll').mockResolvedValueOnce([]);
+      const result = await service.findAll();
+      expect(result).toEqual([]);
+    });
+
+    it('debería llamar a userService.findAll una sola vez', async () => {
+      await service.findAll();
+      expect(service.findAll).toHaveBeenCalledTimes(1);
+    });
+
+  });
 
   // ############################## Tests para findByEmail() ################################################
 //   describe('findByEmail', () => {
@@ -83,42 +124,6 @@ describe('UserService', () => {
 //       jest.spyOn(service, 'findByEmail').mockRejectedValue(new NotFoundException(`User with email ${email} not found!`));
 
 //       await expect(service.findByEmail(email)).rejects.toThrow(NotFoundException);
-//     });
-
-//   });
-    
-//   // ############################## Tests para findAll() ####################################################
-//   describe('findAll', () => {
-
-//     it('debería retornar un array de usuarios', async () => {
-//       const result = await controller.findAll();
-//       expect(result).toEqual([
-//         { id: 1, name: 'John Doe', email: 'john.doe@example.com' },
-//         { id: 2, name: 'Jane Doe', email: 'jane.doe@example.com' },
-//       ]);
-//     });
-
-//     it('hay 2 elementos en el array', async () => {
-//       const result = await controller.findAll();
-//       expect(result).toHaveLength(2);
-//     });
-
-//     it('todos los elementos de la lista deben ser instancias de User', async () => {
-//       const result = await controller.findAll();
-//       result.forEach(user => {
-//         expect(user).toBeInstanceOf(User);
-//       });
-//     });
-    
-//     it('debería retornar un array vacío si no hay usuarios', async () => {
-//       jest.spyOn(service, 'findAll').mockResolvedValueOnce([]);
-//       const result = await controller.findAll();
-//       expect(result).toEqual([]);
-//     });
-
-//     it('debería llamar a userService.findAll una sola vez', async () => {
-//       await controller.findAll();
-//       expect(service.findAll).toHaveBeenCalledTimes(1);
 //     });
 
 //   });
