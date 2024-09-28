@@ -5,9 +5,10 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { CreateUserDto } from "../dto/create-user.dto";
+import { first } from "rxjs";
 
 /*
-  Pruebas unitarias de UserService para verificar el correcto funcionamiento de los métodos.
+  Pruebas unitarias para verificar el correcto funcionamiento de los métodos del módulo de usuarios.
 */
 describe('UserService', () => {
   let service: UserService;
@@ -168,5 +169,47 @@ describe('UserService', () => {
 
   });
 
+    // ############################## Tests para report() ################################################
+    describe('report()', () => {
+        it('debería reportar a un usuario', async () => {
+            const userId = 1;
+
+            // Mockear el repositorio y la entidad de usuario
+            const userToReport = {
+                id: userId,
+                firstName: 'Jhon',
+                lastName: 'Doe',
+                email: 'j.doe@gmail.com',
+                picture: '',
+                reports: 1,
+            } as User;
+
+            jest.spyOn(service, 'findOne').mockResolvedValue(userToReport);
+            jest.spyOn(userRepository, 'save').mockImplementation(async (user) => {
+            return { ...userToReport, reports: user.reports }; // Devuelve el objeto actualizado correctamente
+        });
+
+            // Ejecutar la función
+            const result = await service.report(userId);
+
+            // Comprobar que el usuario reportado tenga un reporte más
+            expect(result.reports).toBe(userToReport.reports + 1);
+        expect(userRepository.save).toHaveBeenCalledWith({
+            ...userToReport,
+            reports: userToReport.reports + 1,
+        });
+    });
+
+    it('debería lanzar NotFoundException si el usuario no es encontrado', async () => {
+        const userId = 999;
+
+        // Mockear findOne para que devuelva undefined
+        jest.spyOn(service, 'findOne').mockResolvedValue(undefined);
+
+        // Ejecutar la función y verificar la excepción
+        await expect(service.report(userId)).rejects.toThrow(NotFoundException);
+    });
+        
+    });
 
 });
