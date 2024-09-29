@@ -181,23 +181,27 @@ describe('UserService', () => {
                 lastName: 'Doe',
                 email: 'j.doe@gmail.com',
                 picture: '',
+                reports: 0,
+          } as User;
+          
+          const reportedUser = {
+                id: userId,
+                firstName: 'Jhon',
+                lastName: 'Doe',
+                email: 'j.doe@gmail.com',
+                picture: '',
                 reports: 1,
             } as User;
 
-            jest.spyOn(service, 'findOne').mockResolvedValue(userToReport);
-            jest.spyOn(userRepository, 'save').mockImplementation(async (user) => {
-            return { ...userToReport, reports: user.reports }; // Devuelve el objeto actualizado correctamente
-        });
+            jest.spyOn(service, 'findOne').mockResolvedValueOnce(userToReport);
+            jest.spyOn(userRepository, 'save').mockResolvedValueOnce(userToReport);
 
             // Ejecutar la función
             const result = await service.report(userId);
 
             // Comprobar que el usuario reportado tenga un reporte más
-            expect(result.reports).toBe(userToReport.reports + 1);
-        expect(userRepository.save).toHaveBeenCalledWith({
-            ...userToReport,
-            reports: userToReport.reports + 1,
-        });
+            expect(result.reports).toBe(reportedUser.reports);
+            expect(userRepository.save).toHaveBeenCalledWith(reportedUser);
     });
 
     it('debería lanzar NotFoundException si el usuario no es encontrado', async () => {
