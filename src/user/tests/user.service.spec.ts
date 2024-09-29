@@ -5,10 +5,9 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { CreateUserDto } from "../dto/create-user.dto";
-import { first } from "rxjs";
 
 /*
-  Pruebas unitarias para verificar el correcto funcionamiento de los métodos del módulo de usuarios.
+  Pruebas unitarias para verificar el correcto funcionamiento de los métodos del servicio de usuarios.
 */
 describe('UserService', () => {
   let service: UserService;
