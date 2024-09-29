@@ -24,6 +24,14 @@ export class UserService {
    * @returns Usuario creado.
    */
   async create(createUserDto: CreateUserDto) {
+
+    // Validar que no exista un usuario registrado con ese correo
+    const existingUser = await this.usersRepository.findOne({ where: { email: createUserDto.email } });
+    
+    if (existingUser) {
+        throw new BadRequestException('This email is already in use!');
+    }
+
     const user = this.usersRepository.create(createUserDto);
     return await this.usersRepository.save(user);
   }
@@ -42,8 +50,11 @@ export class UserService {
    * @returns Usuario encontrado.
    */
   async findOne(id: number): Promise<User> {
+
     if (isNaN(id)) throw new BadRequestException('ID must be a number!');
+
     if (id <= 0) throw new BadRequestException('ID must be greather than 0!');
+
     return await this.usersRepository.findOne({ where: { id } });
   }
 
@@ -53,7 +64,12 @@ export class UserService {
    * @returns Usuario encontrado.
    */
   async findByEmail(email: string) {
-    return await this.usersRepository.findOne({ where: { email } });
+
+    const user = await this.usersRepository.findOne({ where: { email } });
+
+    if (!user) throw new NotFoundException(`User with email ${email} not found!`);
+
+    return user;
   }
 
   /**
