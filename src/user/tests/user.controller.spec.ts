@@ -18,8 +18,9 @@ describe('UserController', () => {
     let userRepository: Repository<User>;
 
     const mockedUsers = [
-        { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '', reports: 0 } as User,
-        { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '', reports: 0 } as User
+        // Se asignan de esta manera para que los detecte como User y no como Object
+        Object.assign(new User(), { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '', reports: 0 }),
+        Object.assign(new User(), { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '', reports: 0 }),
     ];
 
     beforeEach(async () => {
@@ -37,6 +38,8 @@ describe('UserController', () => {
         controller = module.get<UserController>(UserController);
         service = module.get<UserService>(UserService);
         userRepository = module.get<Repository<User>>(getRepositoryToken(User));
+
+        jest.spyOn(service, 'findAll').mockResolvedValue(mockedUsers);
     });
 
     // ############################## Tests para create() ####################################################
@@ -72,14 +75,36 @@ describe('UserController', () => {
     describe('GET /users', () => {
 
         it('debería retornar una lista de usuarios', async () => { 
-            jest.spyOn(service, 'findAll').mockResolvedValue(mockedUsers);
 
             const result = await controller.findAll();
 
             expect(result).toEqual([
-                { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '', reports: 0 },
-                { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '', reports: 0 },
+                Object.assign(new User(), { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '', reports: 0 }),
+                Object.assign(new User(), { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '', reports: 0 }),
             ]);
+        });
+
+        it('hay 2 elementos en el array', async () => {
+            const result = await controller.findAll();
+            expect(result).toHaveLength(2);
+        });
+
+        it('todos los elementos de la lista deben ser instancias de User', async () => {
+            const result = await controller.findAll();
+            result.forEach(user => {
+                expect(user).toBeInstanceOf(User);
+            });
+        });
+        
+        it('debería retornar un array vacío si no hay usuarios', async () => {
+            jest.spyOn(service, 'findAll').mockResolvedValueOnce([]);
+            const result = await controller.findAll();
+            expect(result).toEqual([]);
+        });
+
+        it('debería llamar a userService.findAll una sola vez', async () => {
+            await controller.findAll();
+            expect(service.findAll).toHaveBeenCalledTimes(1);
         });
 
     });
@@ -96,7 +121,7 @@ describe('UserController', () => {
             const result = await controller.findOne(userId);
 
             expect(result).toEqual(
-                { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '', reports: 0 },
+                Object.assign(new User(), { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '', reports: 0 }),
             );
         });
 
@@ -105,29 +130,29 @@ describe('UserController', () => {
     // ############################## Tests para report() ####################################################
     describe('PATCH /users/report/:id', () => {
     it('debería reportar a un usuario', async () => {
-            const userId = 2;
-          
-            const reportedUser = { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '', reports: 1 } as User;
+        const userId = 2;
+        
+        const reportedUser = { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '', reports: 1 } as User;
 
-            jest.spyOn(service, 'findOne').mockResolvedValueOnce(mockedUsers[1]);
-            jest.spyOn(userRepository, 'save').mockResolvedValueOnce(mockedUsers[1]);
+        jest.spyOn(service, 'findOne').mockResolvedValueOnce(mockedUsers[1]);
+        jest.spyOn(userRepository, 'save').mockResolvedValueOnce(mockedUsers[1]);
 
-            // Ejecutar la función
-            const result = await controller.report(userId.toString());
+        // Ejecutar la función
+        const result = await controller.report(userId.toString());
 
-            // Comprobar que el usuario reportado tenga un reporte
-            expect(result.reports).toBe(reportedUser.reports);
-            expect(userRepository.save).toHaveBeenCalledWith(reportedUser);
+        // Comprobar que el usuario reportado tenga un reporte
+        expect(result.reports).toBe(reportedUser.reports);
+        expect(userRepository.save).toHaveBeenCalledWith(reportedUser);
     });
         
     it('debería lanzar NotFoundException si el usuario no es encontrado', async () => {
-    const userId = 111;
+        const userId = 111;
 
-    // Mockear findOne para que devuelva undefined
-    jest.spyOn(service, 'findOne').mockResolvedValue(undefined);
+        // Mockear findOne para que devuelva undefined
+        jest.spyOn(service, 'findOne').mockResolvedValue(undefined);
 
-    // Ejecutar la función y verificar la excepción
-    await expect(controller.report(userId.toString())).rejects.toThrow(NotFoundException);
+        // Ejecutar la función y verificar la excepción
+        await expect(controller.report(userId.toString())).rejects.toThrow(NotFoundException);
     });
 });
 
