@@ -67,6 +67,21 @@ describe('UserService', () => {
       expect(result).toEqual(createdUser);
     });
 
+    it('debería lanzar un error al haber un usuario registrado con el mismo email', async () => {
+      const createUserDto: CreateUserDto = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        picture: '',
+      };
+
+      jest.spyOn(userRepository, 'findOne').mockImplementation(async () =>
+        Object.assign(new User(), { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '' })
+      );
+      
+      await expect(service.create(createUserDto)).rejects.toThrow(BadRequestException);
+    });
+
   });
 
 // ############################## Tests para findAll()###################################################
