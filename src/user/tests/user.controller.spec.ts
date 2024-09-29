@@ -80,4 +80,22 @@ describe('UserController', () => {
         });
 
     });
+
+    // ############################## Tests para findOne() ####################################################
+    describe('GET /users/:id', () => {
+
+        it('debería retornar un usuario', async () => { 
+
+            const userId = "1";
+
+            jest.spyOn(service, 'findOne').mockResolvedValue(mockedUsers[0]);
+
+            const result = await controller.findOne(userId);
+
+            expect(result).toEqual(
+                { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '' },
+            );
+        });
+
+    });
 });
