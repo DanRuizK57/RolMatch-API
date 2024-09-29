@@ -15,6 +15,11 @@ describe('UserController', () => {
     let controller: UserController;
     let service: UserService;
 
+    const mockedUsers = [
+        { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '' } as User,
+        { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' } as User
+    ];
+
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             controllers: [UserController],
@@ -56,6 +61,22 @@ describe('UserController', () => {
             expect(service.create).toHaveBeenCalledWith(createUserDto);
             expect(result).toEqual(expectedUser);  
 
+        });
+
+    });
+
+    // ############################## Tests para findAll() ####################################################
+    describe('GET /users', () => {
+
+        it('debería retornar una lista de usuarios', async () => { 
+            jest.spyOn(service, 'findAll').mockResolvedValue(mockedUsers);
+
+            const result = await controller.findAll();
+
+            expect(result).toEqual([
+                { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '' },
+                { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
+            ]);
         });
 
     });
