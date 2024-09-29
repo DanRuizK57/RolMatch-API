@@ -6,7 +6,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 /*
   Pruebas de integración para verificar el correcto funcionamiento del módulo de usuarios.
@@ -114,15 +114,40 @@ describe('UserController', () => {
 
         it('debería retornar un usuario', async () => { 
 
-            const userId = "1";
+            const userId = 1;
 
             jest.spyOn(service, 'findOne').mockResolvedValue(mockedUsers[0]);
 
-            const result = await controller.findOne(userId);
+            const result = await controller.findOne(userId.toString());
 
             expect(result).toEqual(
                 Object.assign(new User(), { id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '', reports: 0 }),
             );
+        });
+
+        it('debería retornar un error al enviar un número menor a 1', async () => {
+            const userId = -3;
+
+            // Mock para que 'findOne' retorne una excepción
+            jest.spyOn(service, 'findOne').mockRejectedValue(new BadRequestException('ID must be greather than 0!'));
+
+            await expect(controller.findOne(userId.toString())).rejects.toThrow(BadRequestException);
+        });
+
+        it('debería retornar un error al enviar una letra', async () => {
+            const userId = "a";
+
+            // Mock para que 'findOne' retorne una excepción
+            jest.spyOn(service, 'findOne').mockRejectedValue(new BadRequestException('ID must be a number!'));
+
+            await expect(controller.findOne(userId)).rejects.toThrow(BadRequestException);
+        });
+
+        it('debería lanzar NotFoundException si el servicio retorna undefined', async () => {
+            const userId = 111;
+            jest.spyOn(service, 'findOne').mockRejectedValue(new NotFoundException(`User with ID ${userId} not found!`));
+
+            await expect(controller.findOne(userId.toString())).rejects.toThrow(NotFoundException);
         });
 
     });

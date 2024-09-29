@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
@@ -41,7 +41,9 @@ export class UserService {
    * @param id - Identificador del usuario a obtener.
    * @returns Usuario encontrado.
    */
-  async findOne(id: number) {
+  async findOne(id: number): Promise<User> {
+    if (isNaN(id)) throw new BadRequestException('ID must be a number!');
+    if (id <= 0) throw new BadRequestException('ID must be greather than 0!');
     return await this.usersRepository.findOne({ where: { id } });
   }
 
