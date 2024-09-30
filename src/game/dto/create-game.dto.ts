@@ -41,5 +41,5 @@ export class CreateGameDto {
   totalPlayers: number;
 
   @IsEnum(Type)
-  sport: Type;
+  type: Type;
 }
