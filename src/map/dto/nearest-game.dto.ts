@@ -1,5 +1,5 @@
 import { IsInt, IsNumber, IsEnum } from 'class-validator';
-import { Type } from 'src/game/enums/type.enum';
+import { Type } from '../../game/enums/type.enum';
 
 /*
   Clase que representa los valores obligatorios que se deben obtener para buscar la partida más cercana.

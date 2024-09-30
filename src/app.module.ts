@@ -8,7 +8,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MapModule } from './map/map.module';
 import { JwtModule } from '@nestjs/jwt';
 import { Player } from './game/entities/player.entity';
-import { Medal } from './user/entities/medal.entity';
 import { Game } from './game/entities/game.entity';
 import { GameModule } from './game/game.module';
 
@@ -32,7 +31,7 @@ import { GameModule } from './game/game.module';
         password: process.env.POSTGRESQL_PASSWORD,
         database: process.env.POSTGRESQL_DB_NAME,
         // Ingresar entidades creadas
-        entities: [User, Game, Player, Medal],
+        entities: [User, Game, Player],
         // No se debe usar en producción, se pueden perder datos.
         synchronize: true,
     }),
