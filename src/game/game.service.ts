@@ -194,7 +194,7 @@ export class GameService {
 
     const players = await this.playersRepository.find({
       where: { game: { id: gameId } },
-      relations: ['user.medals'],
+      relations: ['user', 'game']
     });
 
     return players;
@@ -211,8 +211,12 @@ export class GameService {
     const game = await this.findOne(gameId);
 
     // Validar que el usuario y la partida existen
-    if (!user || !game) {
-      throw new Error('User or Game not found');
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (!game) {
+      throw new Error('Game not found');
     }
 
     const playerToRemove = await this.playersRepository.findOne({
@@ -316,5 +320,45 @@ export class GameService {
     });
     
     return playerGames;
+  }
+
+  /**
+   * Elimina todas las partidas de un usuario.
+   * @param user - Usuario obtenido.
+   */
+  async removeAllGamesFromUser(user: User) {
+    const games = await this.findByUser(user);
+    
+    if (!games) throw new NotFoundException();
+
+    games.forEach(game => {
+      this.remove(game.id);
+    });
+  }
+
+  /**
+   * Se elimina a un usuario como jugador de todos los partidos a los que se ha unido.
+   * @param user - Usuario obtenido.
+   */
+  async leaveAllGames(user: User) {
+    // Se obtienen todas las partidas
+    const games = await this.findAll();
+
+    games.forEach(async game => {
+      console.log(game);
+      
+      // Se obtienen todos los jugadores de cada partida
+      const players = await this.getPlayers(game.id);
+
+      if (players.length < 1) throw new NotFoundException('No se encontraron jugadores para esta partida.');
+
+      players.forEach(async player => {
+        
+        // Si un jugador coincide con el usuario, lo saca
+        if (player.user.id == user.id) {
+          this.leaveGame(player.user, game.id);
+        }
+      })
+    });
   }
 }

@@ -32,7 +32,8 @@ export class AdminController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     const user = await this.userService.findOne(+id);
-    // const response = await this.gameService.removeAllGamesByUser(user);
+    await this.gameService.leaveAllGames(user);
+    await this.gameService.removeAllGamesFromUser(user);
     return this.adminService.remove(+id);
   }
 }
