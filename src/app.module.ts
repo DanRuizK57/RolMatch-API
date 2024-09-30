@@ -10,11 +10,15 @@ import { JwtModule } from '@nestjs/jwt';
 import { Player } from './game/entities/player.entity';
 import { Game } from './game/entities/game.entity';
 import { GameModule } from './game/game.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
     AuthModule,
     UserModule,
+    GameModule,
+    MapModule,
+    AdminModule,
     // Configuración de las variables de entorno
     ConfigModule.forRoot(),
     // Configuaración JWT
@@ -35,8 +39,6 @@ import { GameModule } from './game/game.module';
         // No se debe usar en producción, se pueden perder datos.
         synchronize: true,
     }),
-    GameModule,
-    MapModule
   ],
   controllers: [],
   providers: [AuthService],
