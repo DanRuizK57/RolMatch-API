@@ -73,8 +73,22 @@ describe('Pruebas de humo para el módulo de usuario', () => {
       .get('/users')
       .expect(200);
 
-    expect(response.body).toEqual(mockedUsers); // Verifica que la respuesta sea igual a mockUsers
-    expect(response.body.length).toBe(2); // Verifica que hay dos usuarios
+    expect(response.body).toEqual(mockedUsers);
+    expect(response.body.length).toBe(2);
+  });
+
+  // Prueba para findOne()
+  it('GET /users/:id', async () => {
+
+    jest.spyOn(userRepository, 'findOne').mockResolvedValue(mockedUsers[0]);
+
+    const userId = 1;
+
+    const response = await request(app.getHttpServer())
+      .get(`/users/${userId}`)
+      .expect(200);
+
+    expect(response.body).toEqual(mockedUsers[0]);
   });
 
   afterAll(async () => {
