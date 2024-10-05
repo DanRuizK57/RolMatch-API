@@ -1,8 +1,8 @@
-import request from 'supertest';
+import * as request from 'supertest';
 import { INestApplication, BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../app.module';
-import { getRepositoryToken } from '@nestjs/typeorm';
+import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
 import { Repository } from 'typeorm';
 
@@ -37,7 +37,7 @@ describe('Pruebas de humo para el módulo de usuario', () => {
     };
 
     const response = await request(app.getHttpServer())
-      .post('/user')
+      .post('/users')
       .send(userDto)
       .expect(201);
 
@@ -45,6 +45,7 @@ describe('Pruebas de humo para el módulo de usuario', () => {
   });
 
   afterAll(async () => {
+    await userRepository.query('DELETE FROM "users" WHERE "email" = $1', ['test@example.com']);
     await app.close();
   });
 });
