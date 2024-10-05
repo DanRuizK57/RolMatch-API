@@ -91,6 +91,25 @@ describe('Pruebas de humo para el módulo de usuario', () => {
     expect(response.body).toEqual(mockedUsers[0]);
   });
 
+  // Prueba para report()
+  it('PATCH /users/report/:id', async () => {
+
+    const userId = 2;
+
+    const reportedUser = { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '', reports: 1 } as User;
+
+    jest.spyOn(userRepository, 'findOne').mockResolvedValue(mockedUsers[1]);
+    jest.spyOn(userRepository, 'save').mockResolvedValueOnce(mockedUsers[1]);
+
+    const response = await request(app.getHttpServer())
+      .patch(`/users/report/${userId}`)
+      .expect(200);
+
+    // Comprobar que el usuario reportado tenga un reporte
+        expect(response.body.reports).toBe(reportedUser.reports);
+        expect(userRepository.save).toHaveBeenCalledWith(reportedUser);
+  });
+
   afterAll(async () => {
     await userRepository.query('DELETE FROM "users" WHERE "email" = $1', ['test@example.com']);
     await app.close();
