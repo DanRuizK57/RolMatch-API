@@ -1,7 +1,7 @@
 import { Controller, Delete, Get, Param } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { UserService } from 'src/user/user.service';
-import { GameService } from 'src/game/game.service';
+import { UserService } from '../user/user.service';
+import { GameService } from '../game/game.service';
 
 /*
   Controlador que maneja las solicitudes HTTP para la administración del sistema.
