@@ -40,7 +40,7 @@ export class UserService {
    * Busca todos los usuarios almacenados en la base de datos.
    * @returns Lista de todos los usuarios.
    */
-  async findAll() {
+  async findAll(): Promise<User[]> {
     return await this.usersRepository.find();
   }
 
@@ -55,7 +55,11 @@ export class UserService {
 
     if (id <= 0) throw new BadRequestException('ID must be greather than 0!');
 
-    return await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({ where: { id } });
+
+    if (!user) throw new NotFoundException(`User with ID ${id} not found!`);
+
+    return user;
   }
 
   /**
@@ -63,7 +67,7 @@ export class UserService {
    * @param email - Correo electrónico del usuario a obtener.
    * @returns Usuario encontrado.
    */
-  async findByEmail(email: string) {
+  async findByEmail(email: string): Promise<User> {
 
     const user = await this.usersRepository.findOne({ where: { email } });
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -53,7 +53,7 @@ export class GameService {
    * Busca todas los partidas almacenadas en la base de datos.
    * @returns Lista de todos las partidas.
    */
-  async findAll() {
+  async findAll(): Promise<Game[]> {
     return await this.gamesRepository.find();
   }
 
@@ -62,8 +62,17 @@ export class GameService {
    * @param id - Identificador del partida a obtener.
    * @returns Partida encontrada.
    */
-  async findOne(id: number) {
-    return await this.gamesRepository.findOne({ where: { id } });
+  async findOne(id: number): Promise<Game> {
+
+    if (isNaN(id)) throw new BadRequestException('ID must be a number!');
+
+    if (id <= 0) throw new BadRequestException('ID must be greather than 0!');
+
+    const game = await this.gamesRepository.findOne({ where: { id } });
+
+    if (!game) throw new NotFoundException(`Game with ID ${id} not found!`);
+
+    return game;
   }
 
   /**
@@ -71,7 +80,7 @@ export class GameService {
    * @param type - Tipo de partida.
    * @returns Partidas encontradas.
    */
-  async findByType(type: Type) {
+  async findByType(type: Type): Promise<Game[]> {
     return await this.gamesRepository.find({ where: { type } });
   }
 
