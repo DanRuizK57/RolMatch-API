@@ -67,12 +67,12 @@ export class GameService {
   }
 
   /**
-   * Obtiene una partida por el tipo al que corresponde.
-   * @param id - Identificador de la partida a obtener.
-   * @returns Partida encontrada.
+   * Obtiene todas las partidas de un tipo específico.
+   * @param type - Tipo de partida.
+   * @returns Partidas encontradas.
    */
   async findByType(type: Type) {
-    return await this.gamesRepository.findOne({ where: { type } });
+    return await this.gamesRepository.find({ where: { type } });
   }
 
   /**

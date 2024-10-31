@@ -253,7 +253,7 @@ describe('GameService', () => {
   // ############################## Tests para findByType() ################################################
   describe('findByType', () => {
 
-    it('debería retornar un usuario con el tipo señalado', async () => {
+    it('debería retornar todas las partidas con el tipo señalado', async () => {
 
       const mockedGame: Game = Object.assign(new Game(), {
         id: 3,
@@ -271,11 +271,11 @@ describe('GameService', () => {
         players: []
       });
 
-      jest.spyOn(service, 'findByType').mockResolvedValue(mockedGame);
+      jest.spyOn(service, 'findByType').mockResolvedValue([mockedGame]);
 
       const user = await service.findByType(Type.Type_3);
 
-      expect(user).toEqual(mockedGame);
+      expect(user).toEqual([mockedGame]);
     });
       
     it('debería lanzar NotFoundException si no se encuentra una partida de ese tipo', async () => {
