@@ -8,6 +8,7 @@ import { CreateGameDto } from "../dto/create-game.dto";
 import { User } from "src/user/entities/user.entity";
 import { Player } from "../entities/player.entity";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { UpdateGameDto } from "../dto/update-game.dto";
 
 /*
   Pruebas unitarias para verificar el correcto funcionamiento de los métodos del servicio de partidas.
@@ -324,6 +325,74 @@ describe('GameService', () => {
       const result = await service.findByUser(owner);
       expect(result).toEqual([]);
     });
+
+  });
+
+  // ############################## Tests para update() ####################################################
+  describe('update', () => {
+
+    it('debería actualizar una partida', async () => {
+
+      const updateGameDto: UpdateGameDto = {
+        title: "Partida Modificada",
+        description: "Partida Modificada",
+        duration: "50 min",
+        date: "31/10/2024",
+        hour: "16:30",
+        latitude: 223.324324,
+        longitude: 23432.234234,
+        playerSlots: 5,
+        totalPlayers: 10,
+        type: Type.Type_2
+      };
+
+      const gameId = 4;
+
+      const modificatedGame = {
+        id: 4,
+        title: "Partida Modificada",
+        description: "Partida Modificada",
+        duration: "50 min",
+        date: "31/10/2024",
+        hour: "16:30",
+        latitude: 223.324324,
+        longitude: 23432.234234,
+        playerSlots: 5,
+        totalPlayers: 10,
+        type: Type.Type_2,
+        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
+        players: []
+      };
+
+      jest.spyOn(service, 'update').mockResolvedValue(modificatedGame as Game);
+
+      const result = await service.update(gameId, modificatedGame);
+      
+      expect(result).toEqual(modificatedGame);
+    });
+
+    it('debería lanzar NotFoundException si la partida no existe', async () => {
+      const gameId = 999; // ID que no existe
+
+      const updateGameDto: UpdateGameDto = {
+        title: "Partida Modificada",
+        description: "Partida Modificada",
+        duration: "50 min",
+        date: "31/10/2024",
+        hour: "16:30",
+        latitude: 223.324324,
+        longitude: 23432.234234,
+        playerSlots: 5,
+        totalPlayers: 10,
+        type: Type.Type_2
+      };
+   
+      jest.spyOn(service, 'findOne').mockImplementation(async () => {
+        throw new NotFoundException(`Game with ID ${gameId} not found!`);
+      });
+   
+      await expect(service.update(gameId, updateGameDto)).rejects.toThrow(new NotFoundException(`Game with ID ${gameId} not found!`));
+   });
 
   });
 
