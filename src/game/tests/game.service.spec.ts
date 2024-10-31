@@ -97,7 +97,6 @@ describe('GameService', () => {
       })
     );
 
-
   });
     
   // ############################## Tests para create() ####################################################
@@ -549,6 +548,55 @@ describe('GameService', () => {
       jest.spyOn(service, 'getPlayers').mockResolvedValue([existingPlayer]);
 
       await expect(service.joinGame(user, game)).rejects.toThrow(new Error('This player is already in the game!'));
+    });
+
+  });
+
+  // ############################## Tests para getPlayers() ####################################################
+  describe('getPlayers', () => {
+    it('debería retornar los jugadores de una partida con ID 1', async () => {
+      const gameId = 1;
+
+      jest.spyOn(service, 'getPlayers').mockImplementation(async () =>
+        [
+          {
+            id: 2,
+            user: { id: 2 },
+            game: { id: 2 }
+          } as Player
+        ]
+      );
+
+      const players = await service.getPlayers(gameId);
+
+      await expect(players).toEqual([
+        {
+            id: 2,
+            user: { id: 2 },
+            game: { id: 2 }
+          } as Player
+      ]);
+    });
+
+    it('debería retornar un error al enviar un número menor a 1', async () => {
+      const gameId = -3;
+
+        // Establece el mock para que `findOne` del servicio lance una excepción
+        jest.spyOn(service, 'getPlayers').mockImplementation(async (id: number) => {
+        if (id <= 0) {
+          throw new BadRequestException('ID must be greather than 0!');
+        }
+        return null;
+      });
+
+      await expect(service.getPlayers(gameId)).rejects.toThrow(BadRequestException);
+    });
+
+    it('debería lanzar NotFoundException si el servicio retorna undefined', async () => {
+      const gameId = 999;
+      jest.spyOn(service, 'getPlayers').mockRejectedValue(new NotFoundException(`Game with ID ${gameId} not found!`));
+
+      await expect(service.getPlayers(gameId)).rejects.toThrow(NotFoundException);
     });
 
   });
