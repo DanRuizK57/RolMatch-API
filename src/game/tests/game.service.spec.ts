@@ -16,6 +16,7 @@ import { UpdateGameDto } from "../dto/update-game.dto";
 describe('GameService', () => {
   let service: GameService;
   let gameRepository: Repository<Game>;
+  let playerRepository: Repository<Player>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -34,6 +35,7 @@ describe('GameService', () => {
 
     service = module.get<GameService>(GameService);
     gameRepository = module.get<Repository<Game>>(getRepositoryToken(Game));
+    playerRepository = module.get<Repository<Player>>(getRepositoryToken(Player));
 
     // Mock del método findAll
     jest.spyOn(service, 'findAll').mockImplementation(async () => [
@@ -79,13 +81,19 @@ describe('GameService', () => {
         duration: '30 mins',
         date: '30/10/2024',
         hour: '14:30',
-        latitude: '3232.234334',
-        longitude: '232.4324',
-        playerSlots: '4',
-        totalPlayers: '6',
+        latitude: 3232.234334,
+        longitude: 232.4324,
+        playerSlots: 4,
+        totalPlayers: 6,
         type: Type.Type_1,
         user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-        players: []
+        players: [
+          {
+            id: 2,
+            user: { id: 2 },
+            game: { id: 2 }
+          } as Player
+        ]
       })
     );
 
@@ -218,13 +226,19 @@ describe('GameService', () => {
         duration: '30 mins',
         date: '30/10/2024',
         hour: '14:30',
-        latitude: '3232.234334',
-        longitude: '232.4324',
-        playerSlots: '4',
-        totalPlayers: '6',
+        latitude: 3232.234334,
+        longitude: 232.4324,
+        playerSlots: 4,
+        totalPlayers: 6,
         type: Type.Type_1,
         user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-        players: []
+        players: [
+          {
+            id: 2,
+            user: { id: 2 },
+            game: { id: 2 }
+          } as Player
+        ]
       });
     });
 
@@ -395,5 +409,57 @@ describe('GameService', () => {
    });
 
   });
+
+  // ############################## Tests para remove() ####################################################
+  describe('remove', () => {
+
+    it('debería eliminar una partida', async () => {
+      const gameId = 2;
+
+      jest.spyOn(service, 'remove').mockResolvedValue(undefined);
+
+      const result = await service.remove(gameId);
+    
+      expect(result).toBeUndefined();
+    });
+
+    it('debería lanzar NotFoundException si la partida no existe', async () => {
+      const gameId = 999; // ID que no existe
+   
+      jest.spyOn(service, 'findOne').mockImplementation(async () => {
+        throw new NotFoundException(`Game with ID ${gameId} not found!`);
+      });
+   
+      await expect(service.remove(gameId)).rejects.toThrow(new NotFoundException(`Game with ID ${gameId} not found!`));
+   });
+
+   it('debería eliminar todos los jugadores asociados a la partida', async () => {
+     const gameId = 1;
+      const mockGame = { id: gameId } as Game;
+      const mockPlayers = [
+        { id: 1, user: { id: 1 }, game: mockGame },
+        { id: 2, user: { id: 2 }, game: mockGame },
+      ] as Player[];
+
+      jest.spyOn(service, 'findOne').mockResolvedValue(mockGame);
+      jest.spyOn(playerRepository, 'find').mockResolvedValue(mockPlayers);
+      jest.spyOn(service, 'leaveGame').mockImplementation(async (user, gameId) => {
+        return { user, game: mockGame } as Player;
+      });
+      jest.spyOn(gameRepository, 'remove').mockResolvedValue(mockGame);
+
+      const result = await service.remove(gameId);
+
+      expect(service.findOne).toHaveBeenCalledWith(gameId);
+      expect(playerRepository.find).toHaveBeenCalledWith({ where: { game: { id: gameId } } });
+      expect(service.leaveGame).toHaveBeenCalledTimes(mockPlayers.length);
+      mockPlayers.forEach((player) => {
+        expect(service.leaveGame).toHaveBeenCalledWith(player.user, gameId);
+      });
+      expect(gameRepository.remove).toHaveBeenCalledWith(mockGame);
+      expect(result).toEqual(mockGame);
+    });
+  });
+
 
 });

@@ -121,7 +121,7 @@ export class GameService {
   async remove(id: number) {
     const gameToRemove = await this.findOne(id);
 
-    if (!gameToRemove) throw new NotFoundException();
+    if (!gameToRemove) throw new NotFoundException(`Game with ID ${id} not found!`);
 
     const players = await this.playersRepository.find({ where: { game: { id: id } } });
 
