@@ -76,9 +76,9 @@ export class GameService {
   }
 
   /**
-   * Obtiene una partida de la cual un usuario en específico es dueño.
-   * @param user - Usuario dueño del partida a obtener.
-   * @returns Partida encontrada.
+   * Obtiene todas las partidas de las cuales un usuario es dueño.
+   * @param user - Usuario dueño de las partidas a obtener.
+   * @returns Partidas encontradas.
    */
   async findByUser(user: User): Promise<Game[]> {
     const games = await this.gamesRepository.find({

@@ -278,11 +278,51 @@ describe('GameService', () => {
       expect(user).toEqual([mockedGame]);
     });
       
-    it('debería lanzar NotFoundException si no se encuentra una partida de ese tipo', async () => {
+    it('debería retornar un array vacío si no se encuentran partidas de ese tipo', async () => {
+      jest.spyOn(service, 'findByType').mockResolvedValueOnce([]);
+      const result = await service.findByType(Type.Type_2);
+      expect(result).toEqual([]);
+    });
 
-      jest.spyOn(service, 'findByType').mockRejectedValue(new NotFoundException(`Games with this type ${Type.Type_1} not found!`));
+  });
 
-      await expect(service.findByType(Type.Type_1)).rejects.toThrow(NotFoundException);
+  // ############################## Tests para findByUser() ################################################
+  describe('findByUser', () => {
+
+    it('debería retornar todas las partidas de las cuales un usuario es dueño', async () => {
+
+      const owner: User = { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' } as User;
+
+      const mockedGame: Game = Object.assign(new Game(), {
+        id: 3,
+        title: 'Partida 3',
+        description: "Partida 3",
+        duration: '50 mins',
+        date: '30/10/2024',
+        hour: '14:30',
+        latitude: '3232.234334',
+        longitude: '232.4324',
+        playerSlots: '4',
+        totalPlayers: '6',
+        type: Type.Type_3,
+        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
+        players: []
+      });
+
+      jest.spyOn(service, 'findByUser').mockResolvedValue([mockedGame]);
+
+      const user = await service.findByUser(owner);
+
+      expect(user).toEqual([mockedGame]);
+    });
+      
+    it('debería retornar un array vacío si el usuario no es dueño de ninguna partida', async () => {
+
+      const owner: User = { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' } as User;
+
+      jest.spyOn(service, 'findByUser').mockResolvedValueOnce([]);
+      const result = await service.findByUser(owner);
+      expect(result).toEqual([]);
     });
 
   });
