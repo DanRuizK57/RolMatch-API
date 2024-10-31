@@ -502,4 +502,55 @@ describe('GameService', () => {
 
   });
 
+  // ############################## Tests para joinGame() ################################################
+  describe('joinGame', () => {
+
+    it('debería ingresar a la partida', async () => {
+      const user = { id: 1 } as User;
+      const game = { id: 1, playerSlots: 5 } as Game;
+      const newPlayer = { user, game } as Player;
+
+      jest.spyOn(service, 'getPlayers').mockResolvedValue([]);
+      jest.spyOn(playerRepository, 'save').mockResolvedValue(newPlayer);
+      jest.spyOn(gameRepository, 'save').mockResolvedValue(game);
+
+      const result = await service.joinGame(user, game);
+
+      expect(service.getPlayers).toHaveBeenCalledWith(game.id);
+      expect(gameRepository.save).toHaveBeenCalledWith({ ...game, playerSlots: 4 });
+      expect(playerRepository.save).toHaveBeenCalledWith(newPlayer);
+      expect(result).toEqual(newPlayer);
+    });
+
+    it('debería lanzar un NotFoundException si el usuario no existe', async () => {
+      const game = { id: 1, playerSlots: 5 } as Game;
+
+      await expect(service.joinGame(null, game)).rejects.toThrow(NotFoundException);
+    });
+
+    it('debería lanzar un NotFoundException si la partida no existe', async () => {
+      const user = { id: 1 } as User;
+
+      await expect(service.joinGame(user, null)).rejects.toThrow(NotFoundException);
+    });
+
+    it('debería lanzar un error si ya no quedan cupos disponibles', async () => {
+      const user = { id: 1 } as User;
+      const game = { id: 1, playerSlots: 0 } as Game;
+
+      await expect(service.joinGame(user, game)).rejects.toThrow(new Error('The player slots of this game are full!'));
+    });
+
+    it('debería lanzar un error si el usuario ya es un jugador de la partida', async () => {
+      const user = { id: 1 } as User;
+      const game = { id: 1, playerSlots: 5 } as Game;
+      const existingPlayer = { user, game } as Player;
+
+      jest.spyOn(service, 'getPlayers').mockResolvedValue([existingPlayer]);
+
+      await expect(service.joinGame(user, game)).rejects.toThrow(new Error('This player is already in the game!'));
+    });
+
+  });
+
 });

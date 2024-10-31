@@ -161,8 +161,11 @@ export class GameService {
   async joinGame(user: User, game: Game): Promise<Player> {
 
     // Validar que el usuario y el partida existen
-    if (!user || !game) {
-      throw new Error('User or Game not found');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (!game) {
+      throw new NotFoundException('Game not found');
     }
 
     if (game.playerSlots <= 0) {
