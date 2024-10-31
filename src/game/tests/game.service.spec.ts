@@ -601,4 +601,62 @@ describe('GameService', () => {
 
   });
 
+  // ############################## Tests para leaveGame() ################################################
+  describe('leaveGame', () => {
+
+    it('debería abandonar la partida', async () => {
+      const user = { id: 1 } as User;
+      const game = { id: 1, playerSlots: 5 } as Game;
+      const playerToRemove = { user, game } as Player;
+
+      jest.spyOn(service, 'findOne').mockResolvedValue(game);
+      jest.spyOn(playerRepository, 'findOne').mockResolvedValue(playerToRemove);
+      jest.spyOn(gameRepository, 'save').mockResolvedValue({ ...game, playerSlots: game.playerSlots + 1 });
+      jest.spyOn(playerRepository, 'remove').mockResolvedValue(playerToRemove);
+
+      const result = await service.leaveGame(user, game.id);
+
+      expect(service.findOne).toHaveBeenCalledWith(game.id);
+      expect(playerRepository.findOne).toHaveBeenCalledWith({
+        where: { user: { id: user.id }, game: { id: game.id } },
+      });
+      expect(gameRepository.save).toHaveBeenCalledWith({ ...game, playerSlots: 6 });
+      expect(playerRepository.remove).toHaveBeenCalledWith(playerToRemove);
+      expect(result).toEqual(playerToRemove);
+    });
+
+    it('debería lanzar un NotFoundException si el usuario no existe', async () => {
+      const gameId = 1;
+
+      await expect(service.leaveGame(null, gameId)).rejects.toThrow(NotFoundException);
+    });
+
+    it('debería lanzar un NotFoundException si la partida no existe', async () => {
+      const user = { id: 1 } as User;
+
+      const gameId = 999;
+
+      jest.spyOn(service, 'findOne').mockImplementation(async () => {
+        throw new NotFoundException(`Game with ID ${gameId} not found!`);
+      });
+
+      await expect(service.leaveGame(user, gameId)).rejects.toThrow(NotFoundException);
+    });
+
+    it('debería lanzar NotFoundException si el usuario no es un jugador de la partida', async () => {
+    const user = { id: 1 } as User;
+    const game = { id: 1, playerSlots: 5 } as Game;
+
+    jest.spyOn(service, 'findOne').mockResolvedValue(game);
+    jest.spyOn(playerRepository, 'findOne').mockResolvedValue(null);
+
+    await expect(service.leaveGame(user, game.id)).rejects.toThrow(NotFoundException);
+    expect(service.findOne).toHaveBeenCalledWith(game.id);
+    expect(playerRepository.findOne).toHaveBeenCalledWith({
+      where: { user: { id: user.id }, game: { id: game.id } },
+    });
+  });
+
+  });
+
 });

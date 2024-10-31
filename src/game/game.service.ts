@@ -224,11 +224,11 @@ export class GameService {
 
     // Validar que el usuario y la partida existen
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     if (!game) {
-      throw new Error('Game not found');
+      throw new NotFoundException('Game not found');
     }
 
     const playerToRemove = await this.playersRepository.findOne({
