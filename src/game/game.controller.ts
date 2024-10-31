@@ -80,7 +80,7 @@ export class GameController {
     if (isNaN(id) || id <= 0) {
       throw new BadRequestException('ID de usuario no válido');
     }
-    return this.gameService.findGameForUser(id, type);
+    return this.gameService.findGamesForUser(id, type);
   }
 
   /**

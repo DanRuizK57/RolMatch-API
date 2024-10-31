@@ -136,12 +136,12 @@ export class GameService {
   }
 
   /**
-   * Se busca partida de interés para el usuario.
+   * Se buscan partidas de interés para el usuario.
    * @param id - Id del usuario.
    * @param type - Tipo de partida por el que se filtra.
    * @returns Partidas que no pertenecen al usuario y son del tipo de deporte buscado.
    */
-  async findGameForUser(id: number, type: Type): Promise<Game[]> {
+  async findGamesForUser(id: number, type: Type): Promise<Game[]> {
     const games = await this.gamesRepository.find({
       where: {
         user: { id: Not(id) },
