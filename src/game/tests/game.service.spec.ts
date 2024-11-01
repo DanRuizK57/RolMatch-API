@@ -5,7 +5,7 @@ import { GameService } from "../game.service";
 import { Game } from "../entities/game.entity";
 import { Type } from "../enums/type.enum";
 import { CreateGameDto } from "../dto/create-game.dto";
-import { User } from "src/user/entities/user.entity";
+import { User } from "../../user/entities/user.entity";
 import { Player } from "../entities/player.entity";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { UpdateGameDto } from "../dto/update-game.dto";
@@ -750,6 +750,39 @@ describe('GameService', () => {
       const result = await service.getUserJoinedGames(userId);
       expect(result).toEqual([]);
     });
+
+  });
+
+  // ############################## Tests para removeAllGamesFromUser() ########################################
+  describe('removeAllGamesFromUser', () => {
+
+    it('debería eliminar todas las partidas de un usuario', async () => {
+    const user = new User();
+    const games = [
+      { id: 1 } as Game,
+      { id: 2 } as Game,
+      { id: 3 } as Game,
+    ];
+
+    jest.spyOn(service, 'findByUser').mockResolvedValue(games);
+    const removeSpy = jest.spyOn(service, 'remove').mockResolvedValue({} as any);
+
+    await service.removeAllGamesFromUser(user);
+
+    expect(service.findByUser).toHaveBeenCalledWith(user);
+    expect(removeSpy).toHaveBeenCalledTimes(games.length);
+    games.forEach(game => {
+      expect(removeSpy).toHaveBeenCalledWith(game.id);
+    });
+  });
+
+    it('debería lanzar NotFoundException si el usuario no ha creado partidas', async () => {
+    const user = new User();
+    jest.spyOn(service, 'findByUser').mockResolvedValue([]);
+
+    await expect(service.removeAllGamesFromUser(user)).rejects.toThrow(NotFoundException);
+    expect(service.findByUser).toHaveBeenCalledWith(user);
+  });
 
   });
 

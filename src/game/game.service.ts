@@ -338,7 +338,7 @@ export class GameService {
   async removeAllGamesFromUser(user: User) {
     const games = await this.findByUser(user);
     
-    if (!games) throw new NotFoundException();
+    if (!games || games.length === 0) throw new NotFoundException('The user has not joined any games yet!');
 
     games.forEach(game => {
       this.remove(game.id);
