@@ -74,11 +74,11 @@ export class GameController {
    * @param userId - Identificador del usuario dueño de la partida obtenida desde la URL (no se utiliza pero se encuentra debido a un bug(ver README)).
    * @returns Partidas encontradas.
    */
-  @Get('/userSearch/:userId')
-  async findGameForUser(@Body() findGameDto: FindGameDto) {
+  @Get('/user-search/:userId')
+  async findGamesForUser(@Body() findGameDto: FindGameDto) {
     const { id, type } = findGameDto;
     if (isNaN(id) || id <= 0) {
-      throw new BadRequestException('ID de usuario no válido');
+      throw new BadRequestException('Invalid ID');
     }
     return this.gameService.findGamesForUser(id, type);
   }

@@ -11,6 +11,7 @@ import { Type } from '../enums/type.enum';
 import { CreateGameDto } from '../dto/create-game.dto';
 import { UserService } from '../../user/user.service';
 import { User } from '../../user/entities/user.entity';
+import { FindGameDto } from '../dto/find-game.dto';
 
 /*
   Pruebas de integración para verificar el correcto funcionamiento del módulo de partidas.
@@ -302,8 +303,59 @@ describe('GameController', () => {
 
         jest.spyOn(service, 'findByUser').mockResolvedValueOnce([]);
         jest.spyOn(userService, 'findOne').mockResolvedValue({ id: userId } as User);
-        
+
       const result = await controller.findByUser(userId.toString());
+      expect(result).toEqual([]);
+    });
+
+  });
+    
+    // ############################## Tests para findGamesForUser() #########################################
+  describe('findGamesForUser', () => {
+
+    it('debería retornar partidas de un usuario y que son de un tipo', async () => {
+
+        const ownerId = 2;
+        
+        const findGameDto: FindGameDto = {
+            id: ownerId,
+            type: Type.Type_3
+        };
+
+      const mockedGame: Game = Object.assign(new Game(), {
+        id: 3,
+        title: 'Partida 3',
+        description: "Partida 3",
+        duration: '50 mins',
+        date: '30/10/2024',
+        hour: '14:30',
+        latitude: '3232.234334',
+        longitude: '232.4324',
+        playerSlots: '4',
+        totalPlayers: '6',
+        type: Type.Type_3,
+        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
+        players: []
+      });
+
+      jest.spyOn(service, 'findGamesForUser').mockResolvedValue([mockedGame]);
+
+      const games = await controller.findGamesForUser(findGameDto);
+
+      expect(games).toEqual([mockedGame]);
+    });
+      
+    it('debería retornar un array vacío si no hay partidas de un usuario y que son de un tip', async () => {
+
+        const ownerId = 1;
+        
+        const findGameDto: FindGameDto = {
+            id: ownerId,
+            type: Type.Type_2
+        };
+
+      jest.spyOn(service, 'findGamesForUser').mockResolvedValueOnce([]);
+      const result = await controller.findGamesForUser(findGameDto);
       expect(result).toEqual([]);
     });
 
