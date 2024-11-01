@@ -203,7 +203,65 @@ describe('GameController', () => {
             const result = await controller.findAll();
             expect(result).toEqual([]);
         });
-        
+
+    });
+
+    // ############################## Tests para findOne() ####################################################
+    describe('GET /games/:id', () => {
+
+        it('debería retornar una partida', async () => { 
+
+            const gameId = 1;
+
+            jest.spyOn(service, 'findOne').mockResolvedValue(mockedGames[0]);
+
+            const result = await controller.findOne(gameId.toString());
+
+            expect(result).toEqual(
+                Object.assign(
+                    new Game(), {
+                    id: 1,
+                    title: 'Partida',
+                    description: "Partida",
+                    duration: '30 mins',
+                    date: '30/10/2024',
+                    hour: '14:30',
+                    latitude: '3232.234334',
+                    longitude: '232.4324',
+                    playerSlots: '4',
+                    totalPlayers: '6',
+                    type: Type.Type_1,
+                    user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
+                    players: []
+                }),
+            );
+        });
+
+        it('debería retornar un error al enviar un número menor a 1', async () => {
+            const gameId = -3;
+
+            // Mock para que 'findOne' retorne una excepción
+            jest.spyOn(service, 'findOne').mockRejectedValue(new BadRequestException('ID must be greather than 0!'));
+
+            await expect(controller.findOne(gameId.toString())).rejects.toThrow(BadRequestException);
+        });
+
+        it('debería retornar un error al enviar una letra', async () => {
+            const gameId = "a";
+
+            // Mock para que 'findOne' retorne una excepción
+            jest.spyOn(service, 'findOne').mockRejectedValue(new BadRequestException('ID must be a number!'));
+
+            await expect(controller.findOne(gameId)).rejects.toThrow(BadRequestException);
+        });
+
+        it('debería lanzar NotFoundException si el servicio retorna undefined', async () => {
+            const gameId = 111;
+            jest.spyOn(service, 'findOne').mockRejectedValue(new NotFoundException(`Game with ID ${gameId} not found!`));
+
+            await expect(controller.findOne(gameId.toString())).rejects.toThrow(NotFoundException);
+        });
+
     });
     
 });
