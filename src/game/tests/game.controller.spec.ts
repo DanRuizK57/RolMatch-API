@@ -91,7 +91,7 @@ describe('GameController', () => {
     });
 
     // ############################## Tests para create() ####################################################
-    describe('POST /games', () => {
+    describe('create', () => {
 
         it('debería crear una partida', async () => {
 
@@ -147,7 +147,7 @@ describe('GameController', () => {
     });
 
     // ############################## Tests para findAll() ####################################################
-    describe('GET /games', () => {
+    describe('findAll', () => {
 
         it('debería retornar una lista de partidas', async () => { 
 
@@ -209,7 +209,7 @@ describe('GameController', () => {
     });
 
     // ############################## Tests para findOne() ####################################################
-    describe('GET /games/:id', () => {
+    describe('findOne', () => {
 
         it('debería retornar una partida', async () => { 
 
@@ -518,6 +518,55 @@ describe('GameController', () => {
 
     await expect(controller.joinGame(user.id, game.id)).rejects.toThrow(new Error('This player is already in the game!'));
   });
+
+  });
+    
+  // ############################## Tests para getPlayers() ####################################################
+  describe('getPlayers', () => {
+    it('debería retornar los jugadores de una partida con ID 1', async () => {
+      const gameId = 1;
+
+      jest.spyOn(service, 'getPlayers').mockImplementation(async () =>
+        [
+          {
+            id: 2,
+            user: { id: 2 },
+            game: { id: 2 }
+          } as Player
+        ]
+      );
+
+      const players = await controller.getPlayers(gameId);
+
+      await expect(players).toEqual([
+        {
+            id: 2,
+            user: { id: 2 },
+            game: { id: 2 }
+          } as Player
+      ]);
+    });
+
+    it('debería retornar un error al enviar un número menor a 1', async () => {
+      const gameId = -3;
+
+        // Establece el mock para que `findOne` del servicio lance una excepción
+        jest.spyOn(service, 'getPlayers').mockImplementation(async (id: number) => {
+        if (id <= 0) {
+          throw new BadRequestException('ID must be greather than 0!');
+        }
+        return null;
+      });
+
+      await expect(controller.getPlayers(gameId)).rejects.toThrow(BadRequestException);
+    });
+
+    it('debería lanzar NotFoundException si el servicio retorna undefined', async () => {
+      const gameId = 999;
+      jest.spyOn(service, 'getPlayers').mockRejectedValue(new NotFoundException(`Game with ID ${gameId} not found!`));
+
+      await expect(controller.getPlayers(gameId)).rejects.toThrow(NotFoundException);
+    });
 
   });
     
