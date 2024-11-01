@@ -570,4 +570,47 @@ describe('GameController', () => {
 
   });
     
+  // ############################## Tests para leaveGame() ####################################################
+  describe('leaveGame', () => {
+  
+  it('debería permitir a un usuario salir de la partida', async () => {
+    const userId = 1;
+    const gameId = 1;
+    const user = { id: userId } as User;
+
+    jest.spyOn(userService, 'findOne').mockResolvedValue(user);
+    
+    jest.spyOn(service, 'leaveGame').mockResolvedValue(undefined);
+
+    await controller.leaveGame(userId, gameId);
+
+    expect(userService.findOne).toHaveBeenCalledWith(userId);
+    expect(service.leaveGame).toHaveBeenCalledWith(user, gameId);
+  });
+
+  it('debería lanzar un NotFoundException si el usuario no existe', async () => {
+    const userId = 1;
+    const gameId = 1;
+
+    jest.spyOn(userService, 'findOne').mockResolvedValue(null);
+
+    await expect(controller.leaveGame(userId, gameId)).rejects.toThrow(NotFoundException);
+  });
+
+  it('debería lanzar un error si la partida no existe', async () => {
+    const userId = 1;
+    const gameId = 999; // ID de partida inexistente
+    const user = { id: userId } as User;
+
+    jest.spyOn(userService, 'findOne').mockResolvedValue(user);
+    
+    jest.spyOn(service, 'leaveGame').mockRejectedValue(new Error('Game not found'));
+
+    await expect(controller.leaveGame(userId, gameId)).rejects.toThrow(Error);
+  });
+
+});
+
+    
+    
 });

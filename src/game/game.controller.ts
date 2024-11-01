@@ -151,7 +151,7 @@ export class GameController {
 
     // Valida que se encuentre el usuario
     if (!userToLeave) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
     await this.gameService.leaveGame(userToLeave, gameId);
   }
