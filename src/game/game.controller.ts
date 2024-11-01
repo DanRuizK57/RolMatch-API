@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { FindGameDto } from './dto/find-game.dto';
@@ -114,15 +114,15 @@ export class GameController {
   async joinGame(
     @Param('userId') userId: number,
     @Param('gameId') gameId: number,
-  ): Promise<void> {
+  ) {
     const userToJoin = await this.userService.findOne(+userId);
     const match = await this.gameService.findOne(gameId);
 
     // Valida que se encuentre el usuario
     if (!userToJoin) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
-    await this.gameService.joinGame(userToJoin, match);
+    return await this.gameService.joinGame(userToJoin, match);
   }
 
   /**

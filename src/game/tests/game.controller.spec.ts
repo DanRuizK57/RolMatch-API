@@ -289,9 +289,8 @@ describe('GameController', () => {
         players: []
       });
 
-      jest.spyOn(service, 'findByUser').mockResolvedValue([mockedGame]);
-
       jest.spyOn(userService, 'findOne').mockResolvedValue({ id: userId } as User);
+      jest.spyOn(service, 'findByUser').mockResolvedValue([mockedGame]);
 
       const game = await controller.findByUser(userId.toString());
 
@@ -302,8 +301,8 @@ describe('GameController', () => {
 
       const userId = 4;
 
-        jest.spyOn(service, 'findByUser').mockResolvedValueOnce([]);
         jest.spyOn(userService, 'findOne').mockResolvedValue({ id: userId } as User);
+        jest.spyOn(service, 'findByUser').mockResolvedValueOnce([]);
 
       const result = await controller.findByUser(userId.toString());
       expect(result).toEqual([]);
@@ -452,6 +451,73 @@ describe('GameController', () => {
    
       await expect(controller.remove(gameId.toString())).rejects.toThrow(new NotFoundException(`Game with ID ${gameId} not found!`));
    });
+
+  });
+    
+  // ############################## Tests para joinGame() ################################################
+  describe('joinGame', () => {
+
+    it('debería ingresar a la partida', async () => {
+        const user = { id: 1 } as User;
+        const game = { id: 1, playerSlots: 5 } as Game;
+        const newPlayer = { user, game } as Player;
+
+        jest.spyOn(userService, 'findOne').mockResolvedValue(user);
+        jest.spyOn(service, 'findOne').mockResolvedValue(game);
+        
+        jest.spyOn(service, 'joinGame').mockResolvedValue(newPlayer);
+        
+        await controller.joinGame(user.id, game.id); // Cambia a await
+
+        expect(userService.findOne).toHaveBeenCalledWith(user.id);
+        expect(service.findOne).toHaveBeenCalledWith(game.id);
+        expect(service.joinGame).toHaveBeenCalledWith(user, game);
+    });
+
+  it('debería lanzar un NotFoundException si el usuario no existe', async () => {
+      const gameId = 1;
+      
+      const userId = 999; // ID de usuario inexistente
+
+      jest.spyOn(userService, 'findOne').mockResolvedValue(null);
+      jest.spyOn(service, 'findOne').mockResolvedValue({ id: 1 } as Game);
+
+    await expect(controller.joinGame(userId, gameId)).rejects.toThrow(NotFoundException);
+    });
+
+
+  it('debería lanzar un NotFoundException si la partida no existe', async () => {
+      const user = { id: 1 } as User;
+      
+      const gameId = 988;
+
+    jest.spyOn(userService, 'findOne').mockResolvedValue(user);
+    jest.spyOn(service, 'findOne').mockResolvedValue(null);
+
+    await expect(controller.joinGame(user.id, gameId)).rejects.toThrow(NotFoundException);
+  });
+
+  it('debería lanzar un error si ya no quedan cupos disponibles', async () => {
+    const user = { id: 1 } as User;
+    const game = { id: 1, playerSlots: 0 } as Game;
+
+    jest.spyOn(userService, 'findOne').mockResolvedValue(user);
+    jest.spyOn(service, 'findOne').mockResolvedValue(game);
+
+    await expect(controller.joinGame(user.id, game.id)).rejects.toThrow(new Error('The player slots of this game are full!'));
+  });
+
+  it('debería lanzar un error si el usuario ya es un jugador de la partida', async () => {
+    const user = { id: 1 } as User;
+    const game = { id: 1, playerSlots: 5 } as Game;
+    const existingPlayer = { user, game } as Player;
+
+    jest.spyOn(userService, 'findOne').mockResolvedValue(user);
+    jest.spyOn(service, 'findOne').mockResolvedValue(game);
+    jest.spyOn(service, 'getPlayers').mockResolvedValue([existingPlayer]);
+
+    await expect(controller.joinGame(user.id, game.id)).rejects.toThrow(new Error('This player is already in the game!'));
+  });
 
   });
     
