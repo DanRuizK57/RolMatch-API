@@ -324,7 +324,7 @@ export class GameService {
     });
  
     let playerGames = []
-    players.forEach(player => {
+      players.forEach(player => {
       playerGames.push(player.game)
     });
     
