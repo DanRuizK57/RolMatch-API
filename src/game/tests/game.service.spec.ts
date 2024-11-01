@@ -659,4 +659,57 @@ describe('GameService', () => {
 
   });
 
+  // ############################## Tests para findNearestGame() ################################################
+  describe('findNearestGame', () => {
+
+      it('debería retornar la partida más cercana', async () => {
+      const games = [
+        { id: 1, latitude: 40.73061, longitude: -73.935242 } as Game, // Distancia: 8.3 km
+        { id: 2, latitude: 40.712776, longitude: -74.005974 } as Game, // Distancia: 0.0 km (más cercano)
+        { id: 3, latitude: 40.789142, longitude: -73.13496 } as Game, // Distancia: 76.1 km
+      ];
+
+      jest.spyOn(gameRepository, 'find').mockResolvedValue(games);
+      jest.spyOn(service, 'calculateDistance')
+        .mockImplementation((lat1, lon1, lat2, lon2) => {
+          if (lat2 === 40.73061 && lon2 === -73.935242) return 8.3;
+          if (lat2 === 40.712776 && lon2 === -74.005974) return 0.0;
+          if (lat2 === 40.789142 && lon2 === -73.13496) return 76.1;
+          return Infinity;
+        });
+
+      const result = await service.findNearestGame(99, Type.Type_1, 40.7128, -74.0060);
+
+      expect(result).toEqual(games[1]);
+      expect(gameRepository.find).toHaveBeenCalledWith({
+        where: {
+          user: { id: expect.not.stringContaining('99') },
+          type: Type.Type_1,
+        },
+      });
+    });
+
+    it('debería filtrar las partidas por el ID de usuario y por el tipo', async () => {
+      const games = [
+        { id: 2, user: { id: 3 }, latitude: 40.712776, longitude: -74.005974, type: Type.Type_2 } as Game,
+      ];
+
+      jest.spyOn(gameRepository, 'find').mockResolvedValue(games);
+      jest.spyOn(service, 'calculateDistance').mockReturnValue(5.0);
+
+      const result = await service.findNearestGame(1, Type.Type_2, 40.7128, -74.0060);
+
+      expect(result).toEqual(games[0]);
+      expect(gameRepository.find).toHaveBeenCalledWith({
+        where: {
+          user: { id: expect.not.stringContaining('1') },
+          type: Type.Type_2,
+        },
+      });
+    });
+
+  });
+
+
+
 });

@@ -262,8 +262,7 @@ export class GameService {
         type: type
       },
     });
-    console.log(games);
-    console.log("A" + latitude)
+
     let nearestGame: Game = null;
     let minDistance = Infinity;
 
@@ -272,12 +271,10 @@ export class GameService {
       console.log(distance);
       if (distance < minDistance) {
         minDistance = distance;
-        console.log("------------------------------");
-        console.log(game);
         nearestGame = game;
       }
     }
-    console.log(`Game más cercano encontrado: ${nearestGame}`);
+    console.log(`Pasrtida más cercana encontrada: ${nearestGame}`);
     return nearestGame;
   }
 
@@ -289,7 +286,7 @@ export class GameService {
    * @param lon2 - Longitud del punto 2.
    * @returns Distancia.
    */
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     console.log(`lat1: ${lat1}, lon1: ${lon1}, lat2: ${lat2}, lon2: ${lon2}`);
     const R = 6371; // Radio de la tierra en km
     const dLat = this.deg2rad(lat2 - lat1);
