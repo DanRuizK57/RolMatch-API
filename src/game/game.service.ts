@@ -350,24 +350,22 @@ export class GameService {
    * @param user - Usuario obtenido.
    */
   async leaveAllGames(user: User) {
-    // Se obtienen todas las partidas
-    const games = await this.findAll();
+  // Se obtienen todas las partidas
+  const games = await this.findAll();
 
-    games.forEach(async game => {
-      console.log(game);
-      
-      // Se obtienen todos los jugadores de cada partida
-      const players = await this.getPlayers(game.id);
+  for (const game of games) {
+    // Se obtienen todos los jugadores de cada partida
+    const players = await this.getPlayers(game.id);
 
-      if (players.length < 1) throw new NotFoundException('No se encontraron jugadores para esta partida.');
+    if (players.length < 1) throw new NotFoundException('Players not found!');
 
-      players.forEach(async player => {
-        
-        // Si un jugador coincide con el usuario, lo saca
-        if (player.user.id == user.id) {
-          this.leaveGame(player.user, game.id);
-        }
-      })
-    });
+    for (const player of players) {
+      // Si un jugador coincide con el usuario, lo saca
+      if (player.user.id === user.id) {
+        await this.leaveGame(player.user, game.id);
+      }
+    }
   }
+}
+
 }

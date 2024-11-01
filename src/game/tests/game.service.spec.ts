@@ -786,4 +786,48 @@ describe('GameService', () => {
 
   });
 
+  // ############################## Tests para leaveAllGames() ########################################
+  describe('leaveAllGames', () => {
+  it('debería abandonar todas las partidas a las que un usuario se ha unido', async () => {
+    const user = new User();
+    user.id = 1;
+
+    const games = [
+      { id: 1 } as Game,
+      { id: 2 } as Game,
+    ];
+
+    const players = [
+      { user, game: games[0] } as Player,
+      { user: new User(), game: games[0] } as Player,
+      { user, game: games[1] } as Player,
+    ];
+
+    jest.spyOn(service, 'findAll').mockResolvedValue(games);
+    jest.spyOn(service, 'getPlayers').mockImplementation(async (gameId: number) =>
+      players.filter((player) => player.game.id === gameId)
+    );
+    const leaveGameSpy = jest.spyOn(service, 'leaveGame').mockResolvedValue({} as any);
+
+    await service.leaveAllGames(user);
+
+    expect(service.findAll).toHaveBeenCalled();
+    expect(service.getPlayers).toHaveBeenCalledWith(games[0].id);
+    expect(service.getPlayers).toHaveBeenCalledWith(games[1].id);
+    expect(leaveGameSpy).toHaveBeenCalledTimes(2); // Usuario sale de cada partida en la que está
+    expect(leaveGameSpy).toHaveBeenCalledWith(user, games[0].id);
+    expect(leaveGameSpy).toHaveBeenCalledWith(user, games[1].id);
+  });
+
+  it('debería lanzar NotFoundException si la partida no tiene jugadores', async () => {
+    const games = [{ id: 1 } as Game];
+    jest.spyOn(service, 'findAll').mockResolvedValue(games);
+    jest.spyOn(service, 'getPlayers').mockResolvedValue([]);
+
+    await expect(service.leaveAllGames(new User())).rejects.toThrow(NotFoundException);
+    expect(service.getPlayers).toHaveBeenCalledWith(games[0].id);
+  });
+});
+
+
 });
