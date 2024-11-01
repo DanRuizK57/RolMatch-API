@@ -430,4 +430,29 @@ describe('GameController', () => {
 
   });
     
+    // ############################## Tests para remove() ####################################################
+  describe('remove', () => {
+
+    it('debería eliminar una partida', async () => {
+      const gameId = 2;
+
+      jest.spyOn(service, 'remove').mockResolvedValue(undefined);
+
+      const result = await controller.remove(gameId.toString());
+    
+      expect(result).toBeUndefined();
+    });
+
+    it('debería lanzar NotFoundException si la partida no existe', async () => {
+      const gameId = 999; // ID que no existe
+   
+      jest.spyOn(service, 'findOne').mockImplementation(async () => {
+        throw new NotFoundException(`Game with ID ${gameId} not found!`);
+      });
+   
+      await expect(controller.remove(gameId.toString())).rejects.toThrow(new NotFoundException(`Game with ID ${gameId} not found!`));
+   });
+
+  });
+    
 });
