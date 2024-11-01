@@ -263,5 +263,50 @@ describe('GameController', () => {
         });
 
     });
+
+    // ############################## Tests para findByUser() ################################################
+  describe('findByUser', () => {
+
+    it('debería retornar todas las partidas de las cuales un usuario es dueño', async () => {
+
+        const userId = 2;
+
+      const mockedGame: Game = Object.assign(new Game(), {
+        id: 3,
+        title: 'Partida 3',
+        description: "Partida 3",
+        duration: '50 mins',
+        date: '30/10/2024',
+        hour: '14:30',
+        latitude: '3232.234334',
+        longitude: '232.4324',
+        playerSlots: '4',
+        totalPlayers: '6',
+        type: Type.Type_3,
+        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
+        players: []
+      });
+
+      jest.spyOn(service, 'findByUser').mockResolvedValue([mockedGame]);
+
+      jest.spyOn(userService, 'findOne').mockResolvedValue({ id: userId } as User);
+
+      const game = await controller.findByUser(userId.toString());
+
+      expect(game).toEqual([mockedGame]);
+    });
+      
+    it('debería retornar un array vacío si el usuario no es dueño de ninguna partida', async () => {
+
+      const userId = 4;
+
+        jest.spyOn(service, 'findByUser').mockResolvedValueOnce([]);
+        jest.spyOn(userService, 'findOne').mockResolvedValue({ id: userId } as User);
+        
+      const result = await controller.findByUser(userId.toString());
+      expect(result).toEqual([]);
+    });
+
+  });
     
 });
