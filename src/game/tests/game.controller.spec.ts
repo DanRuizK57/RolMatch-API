@@ -645,7 +645,49 @@ describe('GameController', () => {
     expect(result).toEqual(expectedNearestGame);
   });
 
-});
+  });
 
+  // ############################## Tests para getUserJoinedGames() ########################################
+  describe('getUserJoinedGames', () => {
+
+    it('debería retornar todas las partidas de las cuales un usuario se ha unido', async () => {
+
+      const userId = 2;
+
+      const mockedGame: Game = Object.assign(new Game(), {
+        id: 3,
+        title: 'Partida 3',
+        description: "Partida 3",
+        duration: '50 mins',
+        date: '30/10/2024',
+        hour: '14:30',
+        latitude: '3232.234334',
+        longitude: '232.4324',
+        playerSlots: '4',
+        totalPlayers: '6',
+        type: Type.Type_3,
+        user: { id: 1, firstName: 'Jhon', lastName: "Doe", email: 'jhon.doe@example.com', picture: '' },
+        players: [
+          { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
+        ]
+      });
+
+      jest.spyOn(service, 'getUserJoinedGames').mockResolvedValue([mockedGame]);
+
+      const games = await controller.getUserJoinedGames(userId);
+
+      expect(games).toEqual([mockedGame]);
+    });
+      
+    it('debería retornar un array vacío si el usuario no se ha unido a ninguna partida', async () => {
+
+      const userId = 3;
+
+      jest.spyOn(service, 'getUserJoinedGames').mockResolvedValueOnce([]);
+      const result = await controller.getUserJoinedGames(userId);
+      expect(result).toEqual([]);
+    });
+
+  });
     
 });
