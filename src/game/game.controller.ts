@@ -164,8 +164,6 @@ export class GameController {
   @Get('/nearest-game/:userId')
   async nearestGame(@Body() nearestGameDto: NearestGameDto) {
     let { id, type, latitude, longitude } = nearestGameDto;
-    console.log(nearestGameDto);
-    console.log("--->" + latitude);
     const nearestGame = this.gameService.findNearestGame(id, type, latitude, longitude);
     return nearestGame;
   }

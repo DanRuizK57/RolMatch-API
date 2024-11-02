@@ -13,6 +13,7 @@ import { UserService } from '../../user/user.service';
 import { User } from '../../user/entities/user.entity';
 import { FindGameDto } from '../dto/find-game.dto';
 import { UpdateGameDto } from '../dto/update-game.dto';
+import { NearestGameDto } from 'src/map/dto/nearest-game.dto';
 
 /*
   Pruebas de integración para verificar el correcto funcionamiento del módulo de partidas.
@@ -611,6 +612,40 @@ describe('GameController', () => {
 
 });
 
+  // ############################## Tests para nearestGame() ###########################################
+  describe('nearestGame', () => {
+  
+    it('debería retornar el juego más cercano basado en la ubicación y el tipo', async () => {
     
+    const nearestGameDto: NearestGameDto = {
+      id: 1,
+      type: Type.Type_1,
+      latitude: 40.712776,
+      longitude: -74.005974,
+    };
+
+    const expectedNearestGame = {
+      id: 2,
+      title: 'Partida Cercana',
+      latitude: 40.712776,
+      longitude: -74.005974,
+      type: nearestGameDto.type,
+    };
+
+    jest.spyOn(service, 'findNearestGame').mockResolvedValue(expectedNearestGame as Game);
+
+    const result = await controller.nearestGame(nearestGameDto);
+
+    expect(service.findNearestGame).toHaveBeenCalledWith(
+      nearestGameDto.id,
+      nearestGameDto.type,
+      nearestGameDto.latitude,
+      nearestGameDto.longitude
+    );
+    expect(result).toEqual(expectedNearestGame);
+  });
+
+});
+
     
 });
