@@ -1,8 +1,8 @@
 import * as request from 'supertest';
-import { INestApplication, BadRequestException } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../app.module';
-import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../../user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { UserService } from '../../user/user.service';
@@ -57,11 +57,13 @@ describe('Pruebas de humo para el módulo de partidas', () => {
     playerRepository = moduleFixture.get<Repository<Player>>(getRepositoryToken(Player));
     userRepository = moduleFixture.get<Repository<User>>(getRepositoryToken(User));
 
+    const number = Math.floor(Math.random() * 1000000) + 1;
+
     // Crear un usuario de prueba en la base de datos
     owner = await userRepository.save({
       firstName: 'Test',
       lastName: 'User',
-      email: 'test@example.com',
+      email: `test${number}@example.com`,
       picture: '',
     });
 
@@ -83,8 +85,20 @@ describe('Pruebas de humo para el módulo de partidas', () => {
       type: Type.Type_2,
     };
 
+    const response = await request(app.getHttpServer())
+      .post(`/games/${owner.id}`)
+      .send(createGameDto)
+      .expect(201);
+
+    // Se quitan los valores createdAt porque se generan de forma diferente
+    const { createdAt: actualCreatedAt, user: actualOwner, ...actualGame } = response.body;
+    const { createdAt: responseOwnerDate, ...responseOwner } = actualOwner;
+    const { createdAt: ownerDate, ...ownerWithoutDate } = owner;
+
+    const gameId = response.body.id;
+
     const createdGame = {
-      id: 1,
+      id: gameId,
       title: 'Partida de prueba',
       description: 'Partida',
       duration: '1 hora',
@@ -99,16 +113,6 @@ describe('Pruebas de humo para el módulo de partidas', () => {
 
     jest.spyOn(service, 'create').mockResolvedValue(createdGame as Game);
 
-    const response = await request(app.getHttpServer())
-      .post(`/games/${owner.id}`)
-      .send(createGameDto)
-      .expect(201);
-
-    // Se quitan los valores createdAt porque se generan de forma diferente
-    const { createdAt: actualCreatedAt, user: actualOwner, ...actualGame } = response.body;
-    const { createdAt: responseOwnerDate, ...responseOwner } = actualOwner;
-    const { createdAt: ownerDate, ...ownerWithoutDate } = owner;
-
     // Se compara que sea la misma partida
     expect(actualGame).toEqual(createdGame);
     // Se compara que pertenezca al mismo usuario
@@ -116,9 +120,6 @@ describe('Pruebas de humo para el módulo de partidas', () => {
   });
 
   afterAll(async () => {
-    // await playerRepository.query('DELETE FROM "players" WHERE "gameId" IN (SELECT "id" FROM "games" WHERE "title" = $1)', ['Partida de prueba']);
-    // await gameRepository.query('DELETE FROM "games" WHERE "title" = $1', ['Partida de prueba']);
-    // await userRepository.query('DELETE FROM "users" WHERE "email" = $1', ['test@example.com']);
     await app.close();
   });
 });
