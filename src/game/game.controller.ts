@@ -3,9 +3,9 @@ import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { FindGameDto } from './dto/find-game.dto';
 import { UserService } from '../user/user.service';
-import { NearestGameDto } from '../map/dto/nearest-game.dto';
 import { GameService } from './game.service';
 import { Game } from './entities/game.entity';
+import { NearestGameDto } from './dto/nearest-game.dto';
 
 /*
   Controlador que maneja las solicitudes HTTP para la gestión de partidas.

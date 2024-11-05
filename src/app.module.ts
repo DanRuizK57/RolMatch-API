@@ -5,7 +5,6 @@ import { AuthService } from './auth/auth.service';
 import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MapModule } from './map/map.module';
 import { JwtModule } from '@nestjs/jwt';
 import { Player } from './game/entities/player.entity';
 import { Game } from './game/entities/game.entity';
@@ -17,7 +16,6 @@ import { AdminModule } from './admin/admin.module';
     AuthModule,
     UserModule,
     GameModule,
-    MapModule,
     AdminModule,
     // Configuración de las variables de entorno
     ConfigModule.forRoot(),

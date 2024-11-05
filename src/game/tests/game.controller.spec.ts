@@ -13,7 +13,7 @@ import { UserService } from '../../user/user.service';
 import { User } from '../../user/entities/user.entity';
 import { FindGameDto } from '../dto/find-game.dto';
 import { UpdateGameDto } from '../dto/update-game.dto';
-import { NearestGameDto } from 'src/map/dto/nearest-game.dto';
+import { NearestGameDto } from '../dto/nearest-game.dto';
 
 /*
   Pruebas de integración para verificar el correcto funcionamiento del módulo de partidas.
