@@ -119,6 +119,16 @@ describe('Pruebas de humo para el módulo de partidas', () => {
     expect(responseOwner).toEqual(ownerWithoutDate);
   });
 
+  // Prueba para findAll()
+  it('GET /games', async () => {
+
+    const response = await request(app.getHttpServer())
+      .get('/games')
+      .expect(200);
+
+    expect(response.body.length).toBeGreaterThan(0);
+  });
+
   afterAll(async () => {
     await app.close();
   });
