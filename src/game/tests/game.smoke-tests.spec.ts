@@ -12,6 +12,7 @@ import { Game } from '../entities/game.entity';
 import { Player } from '../entities/player.entity';
 import { Type } from '../enums/type.enum';
 import { CreateGameDto } from '../dto/create-game.dto';
+import { FindGameDto } from '../dto/find-game.dto';
 
 /*
   Pruebas de humo para verificar el correcto funcionamiento del módulo de partidas.
@@ -169,6 +170,39 @@ describe('Pruebas de humo para el módulo de partidas', () => {
         expect(game.user.id).toEqual(mockedGame.user.id);
       });
     });
+  
+    // Tests para findGamesForUser()
+      it('GET /games/user-search/:userId', async () => {
+
+        const ownerId = owner.id;
+        
+        const findGameDto: FindGameDto = {
+            id: ownerId,
+            type: Type.Type_3
+        };
+
+        const mockedGame: Game = Object.assign(new Game(), {
+          title: 'Partida de prueba',
+          description: "Partida de prueba",
+          type: Type.Type_3,
+        });
+
+        jest.spyOn(service, 'findGamesForUser').mockResolvedValue([mockedGame]);
+        
+
+        const response = await request(app.getHttpServer())
+          .get(`/games/user-search/${ownerId}`)
+          .send(findGameDto)
+          .expect(200);
+
+        const games = response.body;
+
+      // Se verifica que las partidas pertenezcan al mismo usuario
+      games.forEach(game => {
+        expect(game.user.id != ownerId).toBe(true);
+        expect(game.type).toBe(findGameDto.type);
+      });
+      });
 
   afterAll(async () => {
     await app.close();
