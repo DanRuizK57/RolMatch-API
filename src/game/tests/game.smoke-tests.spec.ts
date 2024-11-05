@@ -129,6 +129,20 @@ describe('Pruebas de humo para el módulo de partidas', () => {
     expect(response.body.length).toBeGreaterThan(0);
   });
 
+  // Prueba para finOne()
+  it('GET /games/:id', async () => {
+
+    jest.spyOn(gameRepository, 'findOne').mockResolvedValue(mockedGames[0]);
+
+    const gameId = 1;
+
+    const response = await request(app.getHttpServer())
+      .get(`/games/${gameId}`)
+      .expect(200);
+
+    expect(response.body).toEqual(mockedGames[0]);
+  });
+
   afterAll(async () => {
     await app.close();
   });
