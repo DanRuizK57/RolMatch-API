@@ -71,7 +71,8 @@ describe('Pruebas de humo para el módulo de partidas', () => {
   });
 
   // Prueba para create()
-  it('POST /games', async () => {
+  it('POST /games/:userId', async () => {
+
     const createGameDto: CreateGameDto = {
       title: 'Partida de prueba',
       description: 'Partida',
@@ -142,6 +143,32 @@ describe('Pruebas de humo para el módulo de partidas', () => {
 
     expect(response.body).toEqual(mockedGames[0]);
   });
+
+  // Tests para findByUser()
+    it('GET /games/user/:userId', async () => {
+
+      const userId = owner.id;
+
+      const mockedGame: Game = Object.assign(new Game(), {
+        title: 'Partida de prueba',
+        description: "Partida de prueba",
+        user: { id: userId } as User,
+      });
+
+      jest.spyOn(userService, 'findOne').mockResolvedValue({ id: userId } as User);
+      jest.spyOn(service, 'findByUser').mockResolvedValue([mockedGame]);
+
+      const response = await request(app.getHttpServer())
+        .get(`/games/user/${userId}`)
+        .expect(200);
+      
+      const games = response.body;
+
+      // Se verifica que las partidas pertenezcan al mismo usuario
+      games.forEach(game => {
+        expect(game.user.id).toEqual(mockedGame.user.id);
+      });
+    });
 
   afterAll(async () => {
     await app.close();

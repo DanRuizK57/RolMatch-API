@@ -92,6 +92,7 @@ export class GameService {
   async findByUser(user: User): Promise<Game[]> {
     const games = await this.gamesRepository.find({
       where: { user: { id: user.id } },
+      relations: ['user']
     });
 
     return games;
