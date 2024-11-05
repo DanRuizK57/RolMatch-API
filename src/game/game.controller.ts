@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { FindGameDto } from './dto/find-game.dto';
@@ -74,13 +74,13 @@ export class GameController {
    * @param userId - Identificador del usuario dueño de la partida obtenida desde la URL (no se utiliza pero se encuentra debido a un bug(ver README)).
    * @returns Partidas encontradas.
    */
-  @Get('/userSearch/:userId')
-  async findGameForUser(@Body() findGameDto: FindGameDto) {
+  @Get('/user-search/:userId')
+  async findGamesForUser(@Body() findGameDto: FindGameDto) {
     const { id, type } = findGameDto;
     if (isNaN(id) || id <= 0) {
-      throw new BadRequestException('ID de usuario no válido');
+      throw new BadRequestException('Invalid ID');
     }
-    return this.gameService.findGameForUser(id, type);
+    return this.gameService.findGamesForUser(id, type);
   }
 
   /**
@@ -114,15 +114,15 @@ export class GameController {
   async joinGame(
     @Param('userId') userId: number,
     @Param('gameId') gameId: number,
-  ): Promise<void> {
+  ) {
     const userToJoin = await this.userService.findOne(+userId);
     const match = await this.gameService.findOne(gameId);
 
     // Valida que se encuentre el usuario
     if (!userToJoin) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
-    await this.gameService.joinGame(userToJoin, match);
+    return await this.gameService.joinGame(userToJoin, match);
   }
 
   /**
@@ -151,7 +151,7 @@ export class GameController {
 
     // Valida que se encuentre el usuario
     if (!userToLeave) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
     await this.gameService.leaveGame(userToLeave, gameId);
   }
@@ -164,8 +164,6 @@ export class GameController {
   @Get('/nearest-game/:userId')
   async nearestGame(@Body() nearestGameDto: NearestGameDto) {
     let { id, type, latitude, longitude } = nearestGameDto;
-    console.log(nearestGameDto);
-    console.log("--->" + latitude);
     const nearestGame = this.gameService.findNearestGame(id, type, latitude, longitude);
     return nearestGame;
   }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -44,7 +44,7 @@ export class GameService {
     const savedGame = await this.gamesRepository.save(game);
 
     // Añadir el dueño de la partida como jugador
-    this.joinGame(owner, savedGame);
+    await this.joinGame(owner, savedGame);
 
     return savedGame;
   }
@@ -53,7 +53,7 @@ export class GameService {
    * Busca todas los partidas almacenadas en la base de datos.
    * @returns Lista de todos las partidas.
    */
-  async findAll() {
+  async findAll(): Promise<Game[]> {
     return await this.gamesRepository.find();
   }
 
@@ -62,27 +62,37 @@ export class GameService {
    * @param id - Identificador del partida a obtener.
    * @returns Partida encontrada.
    */
-  async findOne(id: number) {
-    return await this.gamesRepository.findOne({ where: { id } });
+  async findOne(id: number): Promise<Game> {
+
+    if (isNaN(id)) throw new BadRequestException('ID must be a number!');
+
+    if (id <= 0) throw new BadRequestException('ID must be greather than 0!');
+
+    const game = await this.gamesRepository.findOne({ where: { id } });
+
+    if (!game) throw new NotFoundException(`Game with ID ${id} not found!`);
+
+    return game;
   }
 
   /**
-   * Obtiene una partida por el tipo al que corresponde.
-   * @param id - Identificador de la partida a obtener.
-   * @returns Partida encontrada.
+   * Obtiene todas las partidas de un tipo específico.
+   * @param type - Tipo de partida.
+   * @returns Partidas encontradas.
    */
-  async findByType(type: Type) {
-    return await this.gamesRepository.findOne({ where: { type } });
+  async findByType(type: Type): Promise<Game[]> {
+    return await this.gamesRepository.find({ where: { type } });
   }
 
   /**
-   * Obtiene una partida de la cual un usuario en específico es dueño.
-   * @param user - Usuario dueño del partida a obtener.
-   * @returns Partida encontrada.
+   * Obtiene todas las partidas de las cuales un usuario es dueño.
+   * @param user - Usuario dueño de las partidas a obtener.
+   * @returns Partidas encontradas.
    */
   async findByUser(user: User): Promise<Game[]> {
     const games = await this.gamesRepository.find({
       where: { user: { id: user.id } },
+      relations: ['user']
     });
 
     return games;
@@ -112,7 +122,7 @@ export class GameService {
   async remove(id: number) {
     const gameToRemove = await this.findOne(id);
 
-    if (!gameToRemove) throw new NotFoundException();
+    if (!gameToRemove) throw new NotFoundException(`Game with ID ${id} not found!`);
 
     const players = await this.playersRepository.find({ where: { game: { id: id } } });
 
@@ -127,12 +137,12 @@ export class GameService {
   }
 
   /**
-   * Se busca partida de interés para el usuario.
+   * Se buscan partidas de interés para el usuario.
    * @param id - Id del usuario.
    * @param type - Tipo de partida por el que se filtra.
    * @returns Partidas que no pertenecen al usuario y son del tipo de deporte buscado.
    */
-  async findGameForUser(id: number, type: Type): Promise<Game[]> {
+  async findGamesForUser(id: number, type: Type): Promise<Game[]> {
     const games = await this.gamesRepository.find({
       where: {
         user: { id: Not(id) },
@@ -152,8 +162,11 @@ export class GameService {
   async joinGame(user: User, game: Game): Promise<Player> {
 
     // Validar que el usuario y el partida existen
-    if (!user || !game) {
-      throw new Error('User or Game not found');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (!game) {
+      throw new NotFoundException('Game not found');
     }
 
     if (game.playerSlots <= 0) {
@@ -212,11 +225,11 @@ export class GameService {
 
     // Validar que el usuario y la partida existen
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     if (!game) {
-      throw new Error('Game not found');
+      throw new NotFoundException('Game not found');
     }
 
     const playerToRemove = await this.playersRepository.findOne({
@@ -250,8 +263,7 @@ export class GameService {
         type: type
       },
     });
-    console.log(games);
-    console.log("A" + latitude)
+
     let nearestGame: Game = null;
     let minDistance = Infinity;
 
@@ -260,12 +272,10 @@ export class GameService {
       console.log(distance);
       if (distance < minDistance) {
         minDistance = distance;
-        console.log("------------------------------");
-        console.log(game);
         nearestGame = game;
       }
     }
-    console.log(`Game más cercano encontrado: ${nearestGame}`);
+    console.log(`Pasrtida más cercana encontrada: ${nearestGame}`);
     return nearestGame;
   }
 
@@ -277,7 +287,7 @@ export class GameService {
    * @param lon2 - Longitud del punto 2.
    * @returns Distancia.
    */
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     console.log(`lat1: ${lat1}, lon1: ${lon1}, lat2: ${lat2}, lon2: ${lon2}`);
     const R = 6371; // Radio de la tierra en km
     const dLat = this.deg2rad(lat2 - lat1);
@@ -315,7 +325,7 @@ export class GameService {
     });
  
     let playerGames = []
-    players.forEach(player => {
+      players.forEach(player => {
       playerGames.push(player.game)
     });
     
@@ -329,7 +339,7 @@ export class GameService {
   async removeAllGamesFromUser(user: User) {
     const games = await this.findByUser(user);
     
-    if (!games) throw new NotFoundException();
+    if (!games || games.length === 0) throw new NotFoundException('The user has not joined any games yet!');
 
     games.forEach(game => {
       this.remove(game.id);
@@ -341,24 +351,22 @@ export class GameService {
    * @param user - Usuario obtenido.
    */
   async leaveAllGames(user: User) {
-    // Se obtienen todas las partidas
-    const games = await this.findAll();
+  // Se obtienen todas las partidas
+  const games = await this.findAll();
 
-    games.forEach(async game => {
-      console.log(game);
-      
-      // Se obtienen todos los jugadores de cada partida
-      const players = await this.getPlayers(game.id);
+  for (const game of games) {
+    // Se obtienen todos los jugadores de cada partida
+    const players = await this.getPlayers(game.id);
 
-      if (players.length < 1) throw new NotFoundException('No se encontraron jugadores para esta partida.');
+    if (players.length < 1) throw new NotFoundException('Players not found!');
 
-      players.forEach(async player => {
-        
-        // Si un jugador coincide con el usuario, lo saca
-        if (player.user.id == user.id) {
-          this.leaveGame(player.user, game.id);
-        }
-      })
-    });
+    for (const player of players) {
+      // Si un jugador coincide con el usuario, lo saca
+      if (player.user.id === user.id) {
+        await this.leaveGame(player.user, game.id);
+      }
+    }
   }
+}
+
 }
