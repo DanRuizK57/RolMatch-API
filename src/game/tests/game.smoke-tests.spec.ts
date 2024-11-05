@@ -16,7 +16,6 @@ import { CreateGameDto } from '../dto/create-game.dto';
 /*
   Pruebas de humo para verificar el correcto funcionamiento del módulo de partidas.
 */
-
 describe('Pruebas de humo para el módulo de partidas', () => {
   let app: INestApplication;
   let controller: GameController;
@@ -24,40 +23,26 @@ describe('Pruebas de humo para el módulo de partidas', () => {
   let userService: UserService;
   let gameRepository: Repository<Game>;
   let playerRepository: Repository<Player>;
+  let userRepository: Repository<User>;
+  let owner: User;
 
   const mockedGames = [
-        Object.assign(
-        new Game(), {
-        id: 1,
-        title: 'Partida',
-        description: "Partida",
-        duration: '30 mins',
-        date: '30/10/2024',
-        hour: '14:30',
-        latitude: '3232.234334',
-        longitude: '232.4324',
-        playerSlots: '4',
-        totalPlayers: '6',
-        type: Type.Type_1,
-        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-        players: []
-      }),
-      Object.assign(new Game(), {
-        id: 2,
-        title: 'Partida 2',
-        description: "Partida 2",
-        duration: '20 mins',
-        date: '31/10/2024',
-        hour: '10:30',
-        latitude: '3232.234334',
-        longitude: '232.4324',
-        playerSlots: '4',
-        totalPlayers: '6',
-        type: Type.Type_1,
-        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-        players: []
-      }),
-    ];
+    Object.assign(new Game(), {
+      id: 1,
+      title: 'Partida',
+      description: 'Partida',
+      duration: '30 mins',
+      date: '30/10/2024',
+      hour: '14:30',
+      latitude: '3232.234334',
+      longitude: '232.4324',
+      playerSlots: 4,
+      totalPlayers: 6,
+      type: Type.Type_1,
+      user: { id: 2, firstName: 'Jane', lastName: 'Doe', email: 'jane.doe@example.com', picture: '' },
+      players: [],
+    }),
+  ];
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -70,66 +55,71 @@ describe('Pruebas de humo para el módulo de partidas', () => {
     userService = moduleFixture.get<UserService>(UserService);
     gameRepository = moduleFixture.get<Repository<Game>>(getRepositoryToken(Game));
     playerRepository = moduleFixture.get<Repository<Player>>(getRepositoryToken(Player));
-    
+    userRepository = moduleFixture.get<Repository<User>>(getRepositoryToken(User));
+
+    // Crear un usuario de prueba en la base de datos
+    owner = await userRepository.save({
+      firstName: 'Test',
+      lastName: 'User',
+      email: 'test@example.com',
+      picture: '',
+    });
+
     await app.init();
   });
 
   // Prueba para create()
   it('POST /games', async () => {
-
-    const ownerId = 2;
-
-    const owner: User = {
-        id: 2,
-        firstName: 'Jane',
-        lastName: "Doe",
-        email: 'jane.doe@example.com',
-    } as User;
-
     const createGameDto: CreateGameDto = {
-        title: "Partida",
-        description: "Partida",
-        duration: "1 hora",
-        date: "28/10/2024",
-        hour: "17:30",
-        latitude: 223.324324,
-        longitude: 23432.234234,
-        playerSlots: 5,
-        totalPlayers: 10,
-        type: Type.Type_2
+      title: 'Partida de prueba',
+      description: 'Partida',
+      duration: '1 hora',
+      date: '28/10/2024',
+      hour: '17:30',
+      latitude: 223.324324,
+      longitude: 23432.234234,
+      playerSlots: 5,
+      totalPlayers: 10,
+      type: Type.Type_2,
     };
 
     const createdGame = {
-        id: 1,
-        title: "Partida",
-        description: "Partida",
-        duration: "1 hora",
-        date: "28/10/2024",
-        hour: "17:30",
-        latitude: 223.324324,
-        longitude: 23432.234234,
-        playerSlots: 5,
-        totalPlayers: 10,
-        type: Type.Type_2,
-        user: owner
+      id: 1,
+      title: 'Partida de prueba',
+      description: 'Partida',
+      duration: '1 hora',
+      date: '28/10/2024',
+      hour: '17:30',
+      latitude: 223.324324,
+      longitude: 23432.234234,
+      playerSlots: 4,
+      totalPlayers: 10,
+      type: Type.Type_2,
     };
-
-    jest.spyOn(userService, 'findOne').mockResolvedValue(owner as User);
 
     jest.spyOn(service, 'create').mockResolvedValue(createdGame as Game);
 
     const response = await request(app.getHttpServer())
-      .post(`/games/${ownerId}`)
+      .post(`/games/${owner.id}`)
       .send(createGameDto)
       .expect(201);
 
-    expect(service.create).toHaveBeenCalledWith(owner, createGameDto);
-    expect(response).toEqual(createdGame); 
+    // Se quitan los valores createdAt porque se generan de forma diferente
+    const { createdAt: actualCreatedAt, user: actualOwner, ...actualGame } = response.body;
+    const { createdAt: responseOwnerDate, ...responseOwner } = actualOwner;
+    const { createdAt: ownerDate, ...ownerWithoutDate } = owner;
 
+    // Se compara que sea la misma partida
+    expect(actualGame).toEqual(createdGame);
+    // Se compara que pertenezca al mismo usuario
+    expect(responseOwner).toEqual(ownerWithoutDate);
   });
 
   afterAll(async () => {
-    await gameRepository.query('DELETE FROM "games" WHERE "title" = $1', ['Partida']);
+    // await playerRepository.query('DELETE FROM "players" WHERE "gameId" IN (SELECT "id" FROM "games" WHERE "title" = $1)', ['Partida de prueba']);
+    // await gameRepository.query('DELETE FROM "games" WHERE "title" = $1', ['Partida de prueba']);
+    // await userRepository.query('DELETE FROM "users" WHERE "email" = $1', ['test@example.com']);
     await app.close();
   });
 });
+

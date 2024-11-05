@@ -44,7 +44,7 @@ export class GameService {
     const savedGame = await this.gamesRepository.save(game);
 
     // Añadir el dueño de la partida como jugador
-    this.joinGame(owner, savedGame);
+    await this.joinGame(owner, savedGame);
 
     return savedGame;
   }
