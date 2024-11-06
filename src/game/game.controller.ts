@@ -161,10 +161,10 @@ export class GameController {
    * @param userId - Identificador del usuario obtenido desde la URL.
    * @returns Partida más cercana.
    */
-  @Get('/nearest-game/:userId')
+  @Post('/nearest-game/:userId')
   async nearestGame(@Body() nearestGameDto: NearestGameDto) {
     let { id, type, latitude, longitude } = nearestGameDto;
-    const nearestGame = this.gameService.findNearestGame(id, type, latitude, longitude);
+    const nearestGame = await this.gameService.findNearestGame(id, type, latitude, longitude);
     return nearestGame;
   }
 

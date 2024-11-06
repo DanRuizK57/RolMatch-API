@@ -259,7 +259,7 @@ export class GameService {
   async findNearestGame(id: number, type: Type, latitude: number, longitude: number): Promise<Game> {
     const games = await this.gamesRepository.find({
       where: {
-        user: { id: Not(id) },
+        user: { id: id },
         type: type
       },
     });
@@ -275,7 +275,7 @@ export class GameService {
         nearestGame = game;
       }
     }
-    console.log(`Pasrtida más cercana encontrada: ${nearestGame}`);
+    console.log(`Partida más cercana encontrada: ${nearestGame}`);
     return nearestGame;
   }
 
