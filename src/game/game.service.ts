@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -30,23 +30,30 @@ export class GameService {
    * @returns Partida creada.
    */
   async create(owner: User, createGameDto: CreateGameDto) {
+    try {
+      // Valida que los cupos no pueden ser mayor que el número total de jugadores
+      if (createGameDto.playerSlots > createGameDto.totalPlayers) {
+        throw new BadRequestException('Player Slots can not be higher than Total Players.');
+      }
 
-    // Valida que los cupos no pueden ser mayor que el número total de jugadores
-    if (createGameDto.playerSlots > createGameDto.totalPlayers) {
-      throw new Error('Player Slots can not be higher than Total Players.');
+      const game = this.gamesRepository.create({
+        ...createGameDto,
+        user: owner,
+      });
+
+      const savedGame = await this.gamesRepository.save(game);
+
+      // Añadir el dueño de la partida como jugador
+      await this.joinGame(owner, savedGame);
+
+      return savedGame;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
-
-    const game = this.gamesRepository.create({
-      ...createGameDto,
-      user: owner,
-    });
-
-    const savedGame = await this.gamesRepository.save(game);
-
-    // Añadir el dueño de la partida como jugador
-    await this.joinGame(owner, savedGame);
-
-    return savedGame;
   }
 
   /**
@@ -63,16 +70,23 @@ export class GameService {
    * @returns Partida encontrada.
    */
   async findOne(id: number): Promise<Game> {
+    try {
+      if (isNaN(id)) throw new BadRequestException('ID must be a number!');
 
-    if (isNaN(id)) throw new BadRequestException('ID must be a number!');
+      if (id <= 0) throw new BadRequestException('ID must be greather than 0!');
 
-    if (id <= 0) throw new BadRequestException('ID must be greather than 0!');
+      const game = await this.gamesRepository.findOne({ where: { id } });
 
-    const game = await this.gamesRepository.findOne({ where: { id } });
+      if (!game) throw new NotFoundException(`Game with ID ${id} not found!`);
 
-    if (!game) throw new NotFoundException(`Game with ID ${id} not found!`);
-
-    return game;
+      return game;
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
   }
 
   /**
@@ -105,13 +119,21 @@ export class GameService {
    * @returns Partida modificada.
    */
   async update(id: number, updateGameDto: UpdateGameDto) {
-    const gameToUpdate = await this.findOne(id);
+    try {
+      const gameToUpdate = await this.findOne(id);
 
-    if (!gameToUpdate) throw new NotFoundException();
+      if (!gameToUpdate) throw new NotFoundException(`Game with the ID ${id} not found!`);
 
-    Object.assign(gameToUpdate, updateGameDto);
+      Object.assign(gameToUpdate, updateGameDto);
 
-    return await this.gamesRepository.save(gameToUpdate);
+      return await this.gamesRepository.save(gameToUpdate);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
   }
 
   /**
@@ -120,20 +142,28 @@ export class GameService {
    * @returns Partida eliminada.
    */
   async remove(id: number) {
-    const gameToRemove = await this.findOne(id);
+    try {
+      const gameToRemove = await this.findOne(id);
 
-    if (!gameToRemove) throw new NotFoundException(`Game with ID ${id} not found!`);
+      if (!gameToRemove) throw new NotFoundException(`Game with ID ${id} not found!`);
 
-    const players = await this.playersRepository.find({ where: { game: { id: id } } });
+      const players = await this.playersRepository.find({ where: { game: { id: id } } });
 
-    // Saca de la partida a los usuarios que se han unido
-    if (players) {
-      players.forEach((player) => {
-        this.leaveGame(player.user, id);
-      });
+      // Saca de la partida a los usuarios que se han unido
+      if (players) {
+        players.forEach((player) => {
+          this.leaveGame(player.user, id);
+        });
+      }
+
+      return await this.gamesRepository.remove(gameToRemove);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
-
-    return await this.gamesRepository.remove(gameToRemove);
   }
 
   /**
@@ -160,8 +190,8 @@ export class GameService {
    * @returns Jugador creado.
    */
   async joinGame(user: User, game: Game): Promise<Player> {
-
-    // Validar que el usuario y el partida existen
+  try {
+    // Validar que el usuario y la partida existen
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -169,28 +199,40 @@ export class GameService {
       throw new NotFoundException('Game not found');
     }
 
+    // Verificar si hay slots disponibles en el juego
     if (game.playerSlots <= 0) {
-      throw new Error('The player slots of this game are full!');
+      throw new HttpException('The player slots of this game are full!', HttpStatus.BAD_REQUEST);
     }
 
     const players = await this.getPlayers(game.id);
 
+    // Verificar si el usuario ya está en el juego
     players.forEach(player => {
-      if (player.user.id == user.id) throw Error("This player is already in the game!");
+      if (player.user.id === user.id) {
+        throw new HttpException('This player is already in the game!', HttpStatus.BAD_REQUEST);
+      }
     });
 
     const player = new Player();
     player.user = user;
     player.game = game;
 
-    // Ocupa un slot libre del partida
+    // Ocupa un slot libre en la partida
     game.playerSlots--;
 
-    // Se actualiza el aprtido
-    this.gamesRepository.save(game);
+    // Actualiza la partida
+    await this.gamesRepository.save(game);
 
-    return this.playersRepository.save(player);
+    // Guarda y retorna el nuevo jugador
+    return await this.playersRepository.save(player);
+  } catch (error) {
+    if (error instanceof NotFoundException || error instanceof HttpException) {
+      throw error;
+    } else {
+      throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
+}
 
   /**
    * Obtiene todos los jugadores de una partida.
@@ -198,19 +240,27 @@ export class GameService {
    * @returns Lista de jugadores pertenecientes a una partida.
    */
   async getPlayers(gameId: number) {
-    const game = await this.findOne(gameId);
+    try {
+      const game = await this.findOne(gameId);
 
-    // Valida que existe el partida
-    if (!game) {
-      throw new NotFoundException(`Game with ID ${gameId} not found`);
+      // Valida que existe el partida
+      if (!game) {
+        throw new NotFoundException(`Game with ID ${gameId} not found`);
+      }
+
+      const players = await this.playersRepository.find({
+        where: { game: { id: gameId } },
+        relations: ['user', 'game']
+      });
+
+      return players;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+          throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
-
-    const players = await this.playersRepository.find({
-      where: { game: { id: gameId } },
-      relations: ['user', 'game']
-    });
-
-    return players;
   }
 
   /**
@@ -221,34 +271,43 @@ export class GameService {
    */
   async leaveGame(user: User, gameId: number): Promise<Player> {
 
-    const game = await this.findOne(gameId);
+    try {
+      const game = await this.findOne(gameId);
 
-    // Validar que el usuario y la partida existen
-    if (!user) {
-      throw new NotFoundException('User not found');
+      // Validar que el usuario y la partida existen
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (!game) {
+        throw new NotFoundException('Game not found');
+      }
+
+      const playerToRemove = await this.playersRepository.findOne({
+        where:
+          { user: { id: user.id }, game: { id: gameId } }
+      });
+
+      // Validar que el jugador existe
+      if (!playerToRemove) {
+        throw new NotFoundException('User is not a player of this game');
+      }
+
+      // Se libera un slot de la partida
+      game.playerSlots++;
+
+      // Se actualiza la partida
+      this.gamesRepository.save(game);
+
+      return this.playersRepository.remove(playerToRemove);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
 
-    if (!game) {
-      throw new NotFoundException('Game not found');
-    }
-
-    const playerToRemove = await this.playersRepository.findOne({
-      where:
-        { user: { id: user.id }, game: { id: gameId } }
-    });
-
-    // Validar que el jugador existe
-    if (!playerToRemove) {
-      throw new NotFoundException('User is not a player of this game');
-    }
-
-    // Se libera un slot de la partida
-    game.playerSlots++;
-
-    // Se actualiza la partida
-    this.gamesRepository.save(game);
-
-    return this.playersRepository.remove(playerToRemove);
   }
 
   /**
@@ -275,7 +334,6 @@ export class GameService {
         nearestGame = game;
       }
     }
-    console.log(`Partida más cercana encontrada: ${nearestGame}`);
     return nearestGame;
   }
 
@@ -337,13 +395,21 @@ export class GameService {
    * @param user - Usuario obtenido.
    */
   async removeAllGamesFromUser(user: User) {
-    const games = await this.findByUser(user);
+    try {
+      const games = await this.findByUser(user);
     
-    if (!games || games.length === 0) throw new NotFoundException('The user has not joined any games yet!');
+      if (!games || games.length === 0) throw new NotFoundException('The user has not joined any games yet!');
 
-    games.forEach(game => {
-      this.remove(game.id);
-    });
+      games.forEach(game => {
+        this.remove(game.id);
+      });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
   }
 
   /**
@@ -351,22 +417,30 @@ export class GameService {
    * @param user - Usuario obtenido.
    */
   async leaveAllGames(user: User) {
-  // Se obtienen todas las partidas
-  const games = await this.findAll();
+    try {
+      // Se obtienen todas las partidas
+      const games = await this.findAll();
 
-  for (const game of games) {
-    // Se obtienen todos los jugadores de cada partida
-    const players = await this.getPlayers(game.id);
+      for (const game of games) {
+        // Se obtienen todos los jugadores de cada partida
+        const players = await this.getPlayers(game.id);
 
-    if (players.length < 1) throw new NotFoundException('Players not found!');
+        if (players.length < 1) throw new NotFoundException('Players not found!');
 
-    for (const player of players) {
-      // Si un jugador coincide con el usuario, lo saca
-      if (player.user.id === user.id) {
-        await this.leaveGame(player.user, game.id);
+        for (const player of players) {
+          // Si un jugador coincide con el usuario, lo saca
+          if (player.user.id === user.id) {
+            await this.leaveGame(player.user, game.id);
+          }
+        }
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
-}
 
 }

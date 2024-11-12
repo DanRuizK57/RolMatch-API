@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { FindGameDto } from './dto/find-game.dto';
@@ -31,13 +31,21 @@ export class GameController {
     @Param('userId') userId: string,
     @Body() createGameDto: CreateGameDto
   ) {
-    const matchOwner = await this.userService.findOne(+userId);
+    try {
+      const matchOwner = await this.userService.findOne(+userId);
 
-    // Valida que se encuentre el usuario
-    if (!matchOwner) {
-      throw new Error('User not found');
+      // Valida que se encuentre el usuario
+      if (!matchOwner) {
+        throw new NotFoundException('User not found');
+      }
+      return this.gameService.create(matchOwner, createGameDto);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
-    return this.gameService.create(matchOwner, createGameDto);
   }
 
   /**
@@ -76,11 +84,19 @@ export class GameController {
    */
   @Get('/user-search/:userId')
   async findGamesForUser(@Body() findGameDto: FindGameDto) {
-    const { id, type } = findGameDto;
-    if (isNaN(id) || id <= 0) {
-      throw new BadRequestException('Invalid ID');
+    try {
+      const { id, type } = findGameDto;
+      if (isNaN(id) || id <= 0) {
+        throw new BadRequestException('Invalid ID');
+      }
+      return this.gameService.findGamesForUser(id, type);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
-    return this.gameService.findGamesForUser(id, type);
   }
 
   /**
@@ -115,14 +131,22 @@ export class GameController {
     @Param('userId') userId: number,
     @Param('gameId') gameId: number,
   ) {
-    const userToJoin = await this.userService.findOne(+userId);
-    const match = await this.gameService.findOne(gameId);
+    try {
+      const userToJoin = await this.userService.findOne(+userId);
+      const match = await this.gameService.findOne(gameId);
 
-    // Valida que se encuentre el usuario
-    if (!userToJoin) {
-      throw new NotFoundException('User not found');
+      // Valida que se encuentre el usuario
+      if (!userToJoin) {
+        throw new NotFoundException('User not found');
+      }
+      return await this.gameService.joinGame(userToJoin, match);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
-    return await this.gameService.joinGame(userToJoin, match);
   }
 
   /**
@@ -147,13 +171,21 @@ export class GameController {
     @Param('userId') userId: number,
     @Param('gameId') gameId: number,
   ): Promise<void> {
-    const userToLeave = await this.userService.findOne(+userId);
+    try {
+      const userToLeave = await this.userService.findOne(+userId);
 
-    // Valida que se encuentre el usuario
-    if (!userToLeave) {
-      throw new NotFoundException('User not found');
+      // // Valida que se encuentre el usuario
+      // if (!userToLeave) {
+      //   throw new NotFoundException('User not found');
+      // }
+      await this.gameService.leaveGame(userToLeave, gameId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
-    await this.gameService.leaveGame(userToLeave, gameId);
   }
 
   /**

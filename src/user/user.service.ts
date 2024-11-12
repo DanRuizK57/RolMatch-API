@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
@@ -24,16 +24,23 @@ export class UserService {
    * @returns Usuario creado.
    */
   async create(createUserDto: CreateUserDto) {
+    try {
+      // Validar que no exista un usuario registrado con ese correo
+      const existingUser = await this.usersRepository.findOne({ where: { email: createUserDto.email } });
+      
+      if (existingUser) {
+          throw new BadRequestException('This email is already in use!');
+      }
 
-    // Validar que no exista un usuario registrado con ese correo
-    const existingUser = await this.usersRepository.findOne({ where: { email: createUserDto.email } });
-    
-    if (existingUser) {
-        throw new BadRequestException('This email is already in use!');
+      const user = this.usersRepository.create(createUserDto);
+      return await this.usersRepository.save(user);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
-
-    const user = this.usersRepository.create(createUserDto);
-    return await this.usersRepository.save(user);
   }
 
   /**
@@ -50,16 +57,23 @@ export class UserService {
    * @returns Usuario encontrado.
    */
   async findOne(id: number): Promise<User> {
+    try {
+      if (isNaN(id)) throw new BadRequestException('ID must be a number!');
 
-    if (isNaN(id)) throw new BadRequestException('ID must be a number!');
+      if (id <= 0) throw new BadRequestException('ID must be greather than 0!');
 
-    if (id <= 0) throw new BadRequestException('ID must be greather than 0!');
+      const user = await this.usersRepository.findOne({ where: { id } });
 
-    const user = await this.usersRepository.findOne({ where: { id } });
+      if (!user) throw new NotFoundException(`User with ID ${id} not found!`);
 
-    if (!user) throw new NotFoundException(`User with ID ${id} not found!`);
-
-    return user;
+      return user;
+    } catch (error) {
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
   }
 
   /**
@@ -68,12 +82,19 @@ export class UserService {
    * @returns Usuario encontrado.
    */
   async findByEmail(email: string): Promise<User> {
+    try {
+      const user = await this.usersRepository.findOne({ where: { email } });
 
-    const user = await this.usersRepository.findOne({ where: { email } });
+      if (!user) throw new NotFoundException(`User with email ${email} not found!`);
 
-    if (!user) throw new NotFoundException(`User with email ${email} not found!`);
-
-    return user;
+      return user;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
   }
 
   /**
@@ -82,13 +103,21 @@ export class UserService {
    * @returns Usuario reportado.
    */
   async report(id: number) {
-    const userToReport = await this.findOne(id);
+    try {
+      const userToReport = await this.findOne(id);
 
-    if (!userToReport) throw new NotFoundException();
+      if (!userToReport) throw new NotFoundException(`User with ID ${id} not found!`);
 
-    userToReport.reports += 1;
+      userToReport.reports += 1;
 
-    return await this.usersRepository.save(userToReport);;
+      return await this.usersRepository.save(userToReport);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      } else {
+        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
   }
 
 }

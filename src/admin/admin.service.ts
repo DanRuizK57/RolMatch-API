@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../user/entities/user.entity';
 import { MoreThan, Repository } from 'typeorm';
@@ -37,13 +37,21 @@ export class AdminService {
      * @returns Usuario eliminado.
      */
     async remove(id: number) {
-        const userToRemove = await this.usersRepository.findOne({ where: { id } });
+        try {
+            const userToRemove = await this.usersRepository.findOne({ where: { id } });
 
-        if (userToRemove.role == "admin") throw new UnauthorizedException('You can´t remove admins!')
+            if (userToRemove.role == "admin") throw new UnauthorizedException('You can´t remove admins!')
+            
+            if (!userToRemove) throw new NotFoundException(`User with the ID ${id} not found!`);
         
-        if (!userToRemove) throw new NotFoundException();
-    
-        return await this.usersRepository.remove(userToRemove);
+            return await this.usersRepository.remove(userToRemove);
+        } catch (error) {
+            if (error instanceof NotFoundException || error instanceof UnauthorizedException) {
+                throw error;
+            } else {
+                throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
     }
 
     /**
@@ -68,13 +76,21 @@ export class AdminService {
      * @returns Usuario sin reportes.
     */
     async removeReports(id: number) {
-        const userToRemoveReports = await this.usersRepository.findOne({ where: { id } });
+        try {
+            const userToRemoveReports = await this.usersRepository.findOne({ where: { id } });
 
-        if (!userToRemoveReports) throw new NotFoundException();
+            if (!userToRemoveReports) throw new NotFoundException(`User with the ID ${id} not found!`);
 
-        userToRemoveReports.reports = 0;
+            userToRemoveReports.reports = 0;
 
-        return await this.usersRepository.save(userToRemoveReports);;
+            return await this.usersRepository.save(userToRemoveReports);
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw error;
+            } else {
+                throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
     }
 
 }
