@@ -152,6 +152,9 @@ export class GameService {
       // Saca de la partida a los usuarios que se han unido
       if (players) {
         players.forEach((player) => {
+
+          if (!player.user) throw new NotFoundException();
+
           this.leaveGame(player.user, id);
         });
       }
@@ -265,7 +268,7 @@ export class GameService {
 
   /**
    * Elimina a un jugador de una partida.
-   * @param userId - Identificador del usuario obtenido.
+   * @param user - Usuario obtenido.
    * @param gameId - Identificador de la partida obtenida.
    * @returns Jugador eliminado.
    */
@@ -273,7 +276,7 @@ export class GameService {
 
     try {
       const game = await this.findOne(gameId);
-
+      
       // Validar que el usuario y la partida existen
       if (!user) {
         throw new NotFoundException('User not found');

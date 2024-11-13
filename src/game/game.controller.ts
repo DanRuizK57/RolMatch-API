@@ -32,13 +32,13 @@ export class GameController {
     @Body() createGameDto: CreateGameDto
   ) {
     try {
-      const matchOwner = await this.userService.findOne(+userId);
+      const gameOwner = await this.userService.findOne(+userId);
 
       // Valida que se encuentre el usuario
-      if (!matchOwner) {
+      if (!gameOwner) {
         throw new NotFoundException('User not found');
       }
-      return this.gameService.create(matchOwner, createGameDto);
+      return this.gameService.create(gameOwner, createGameDto);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -123,7 +123,7 @@ export class GameController {
   /**
    * Se une a una partida.
    * @param userId - Identificador del usuario obtenido desde la URL.
-   * @param matchId - Identificador de la partida obtenida desde la URL.
+   * @param gameId - Identificador de la partida obtenida desde la URL.
    * @returns Jugador creado.
    */
   @Post(':gameId/join/:userId')
@@ -133,13 +133,13 @@ export class GameController {
   ) {
     try {
       const userToJoin = await this.userService.findOne(+userId);
-      const match = await this.gameService.findOne(gameId);
+      const game = await this.gameService.findOne(gameId);
 
       // Valida que se encuentre el usuario
       if (!userToJoin) {
         throw new NotFoundException('User not found');
       }
-      return await this.gameService.joinGame(userToJoin, match);
+      return await this.gameService.joinGame(userToJoin, game);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -163,7 +163,7 @@ export class GameController {
   /**
    * Abandona una partida.
    * @param userId - Identificador del usuario obtenido desde la URL.
-   * @param matchId - Identificador de la partida obtenida desde la URL.
+   * @param gameId - Identificador de la partida obtenida desde la URL.
    * @returns Jugador eliminado.
    */
   @Delete(':gameId/leave/:userId')
@@ -174,10 +174,10 @@ export class GameController {
     try {
       const userToLeave = await this.userService.findOne(+userId);
 
-      // // Valida que se encuentre el usuario
-      // if (!userToLeave) {
-      //   throw new NotFoundException('User not found');
-      // }
+      // Valida que se encuentre el usuario
+      if (!userToLeave) {
+        throw new NotFoundException('User not found');
+      }
       await this.gameService.leaveGame(userToLeave, gameId);
     } catch (error) {
       if (error instanceof NotFoundException) {

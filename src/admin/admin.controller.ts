@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Param } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Patch } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { UserService } from '../user/user.service';
 import { GameService } from '../game/game.service';
@@ -21,6 +21,16 @@ export class AdminController {
   @Get('/reported/:id')
   findAllReported(@Param('id') id: string) {
     return this.adminService.findAllReported(+id);
+  }
+
+  /**
+   * Resetea los reportes de un usuario.
+   * @param id - Identificador del usuario obtenido desde la URL.
+   * @returns Usuario con el número de reportes en 0.
+   */
+  @Patch('/reports/reset/:id')
+  removeReports(@Param('id') id: string) {
+    return this.adminService.removeReports(+id);
   }
 
   /**
