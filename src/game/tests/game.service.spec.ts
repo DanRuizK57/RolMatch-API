@@ -218,7 +218,7 @@ describe('GameService', () => {
       const gameId = 1;
       const game: Game = await service.findOne(gameId);
 
-      await expect(game).toEqual({
+      expect(game).toEqual({
         id: 1,
         title: 'Partida 1',
         description: "Partida",
@@ -345,19 +345,6 @@ describe('GameService', () => {
   describe('update', () => {
 
     it('debería actualizar una partida', async () => {
-
-      const updateGameDto: UpdateGameDto = {
-        title: "Partida Modificada",
-        description: "Partida Modificada",
-        duration: "50 min",
-        date: "31/10/2024",
-        hour: "16:30",
-        latitude: 223.324324,
-        longitude: 23432.234234,
-        playerSlots: 5,
-        totalPlayers: 10,
-        type: Type.Type_2
-      };
 
       const gameId = 4;
 
@@ -569,7 +556,7 @@ describe('GameService', () => {
 
       const players = await service.getPlayers(gameId);
 
-      await expect(players).toEqual([
+      expect(players).toEqual([
         {
             id: 2,
             user: { id: 2 },
@@ -788,36 +775,42 @@ describe('GameService', () => {
 
   // ############################## Tests para leaveAllGames() ########################################
   describe('leaveAllGames', () => {
-  it('debería abandonar todas las partidas a las que un usuario se ha unido', async () => {
-    const user = new User();
-    user.id = 1;
+    it('debería abandonar todas las partidas a las que un usuario se ha unido', async () => {
+  const user = new User();
+  user.id = 1;
 
-    const games = [
-      { id: 1 } as Game,
-      { id: 2 } as Game,
-    ];
+  const games = [
+    { id: 1 } as Game,
+    { id: 2 } as Game,
+  ];
 
-    const players = [
-      { user, game: games[0] } as Player,
-      { user: new User(), game: games[0] } as Player,
-      { user, game: games[1] } as Player,
-    ];
+  const playersForGame1 = [
+    { user, game: games[0] } as Player,
+    { user: new User(), game: games[0] } as Player,
+  ];
+  const playersForGame2 = [
+    { user, game: games[1] } as Player,
+    { user: new User(), game: games[1] } as Player,
+  ];
 
-    jest.spyOn(service, 'findAll').mockResolvedValue(games);
-    jest.spyOn(service, 'getPlayers').mockImplementation(async (gameId: number) =>
-      players.filter((player) => player.game.id === gameId)
-    );
-    const leaveGameSpy = jest.spyOn(service, 'leaveGame').mockResolvedValue({} as any);
-
-    await service.leaveAllGames(user);
-
-    expect(service.findAll).toHaveBeenCalled();
-    expect(service.getPlayers).toHaveBeenCalledWith(games[0].id);
-    expect(service.getPlayers).toHaveBeenCalledWith(games[1].id);
-    expect(leaveGameSpy).toHaveBeenCalledTimes(2); // Usuario sale de cada partida en la que está
-    expect(leaveGameSpy).toHaveBeenCalledWith(user, games[0].id);
-    expect(leaveGameSpy).toHaveBeenCalledWith(user, games[1].id);
+  jest.spyOn(service, 'findAll').mockResolvedValue(games);
+  jest.spyOn(service, 'getPlayers').mockImplementation(async (gameId: number) => {
+    if (gameId === 1) return playersForGame1;
+    if (gameId === 2) return playersForGame2;
+    return [];
   });
+      
+  jest.spyOn(service, 'leaveGame').mockResolvedValue(undefined);
+
+  await service.leaveAllGames(user);
+
+  expect(service.findAll).toHaveBeenCalled();
+  expect(service.getPlayers).toHaveBeenCalledTimes(games.length);
+  expect(service.leaveGame).toHaveBeenCalledTimes(2); // Se llama dos veces, una para cada partida
+  expect(service.leaveGame).toHaveBeenCalledWith(user, 1); // Verifica la primera partida
+  expect(service.leaveGame).toHaveBeenCalledWith(user, 2); // Verifica la segunda partida
+});
+
 
   it('debería lanzar NotFoundException si la partida no tiene jugadores', async () => {
     const games = [{ id: 1 } as Game];

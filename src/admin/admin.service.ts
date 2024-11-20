@@ -28,7 +28,7 @@ export class AdminService {
 
         if (!user) return false;
 
-        return user.role == "admin" ? true : false;
+        return user.role == "admin";
     }
 
     /**

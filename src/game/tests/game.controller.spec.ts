@@ -85,8 +85,6 @@ describe('GameController', () => {
         controller = module.get<GameController>(GameController);
         service = module.get<GameService>(GameService);
         userService = module.get<UserService>(UserService);
-        gameRepository = module.get<Repository<Game>>(getRepositoryToken(Game));
-        playerRepository = module.get<Repository<Player>>(getRepositoryToken(Player));
 
         jest.spyOn(service, 'findAll').mockResolvedValue(mockedGames);
     });
@@ -134,7 +132,7 @@ describe('GameController', () => {
                 user: owner
             };
 
-            jest.spyOn(userService, 'findOne').mockResolvedValue(owner as User);
+            jest.spyOn(userService, 'findOne').mockResolvedValue(owner);
 
             jest.spyOn(service, 'create').mockResolvedValue(createdGame as Game);
 
@@ -539,7 +537,7 @@ describe('GameController', () => {
 
         const players = await controller.getPlayers(gameId);
 
-        await expect(players).toEqual([
+        expect(players).toEqual([
           {
               id: 2,
               user: { id: 2 },

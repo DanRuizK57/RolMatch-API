@@ -18,7 +18,7 @@ export class GameController {
   */
   constructor(
     private readonly gameService: GameService,
-    private userService: UserService,
+    private readonly userService: UserService,
   ) { }
 
   /**

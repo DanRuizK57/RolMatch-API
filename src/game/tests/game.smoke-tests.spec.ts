@@ -51,11 +51,9 @@ describe('Pruebas de humo para el módulo de partidas', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    controller = moduleFixture.get<GameController>(GameController);
     service = moduleFixture.get<GameService>(GameService);
     userService = moduleFixture.get<UserService>(UserService);
     gameRepository = moduleFixture.get<Repository<Game>>(getRepositoryToken(Game));
-    playerRepository = moduleFixture.get<Repository<Player>>(getRepositoryToken(Player));
     userRepository = moduleFixture.get<Repository<User>>(getRepositoryToken(User));
 
     const number = Math.floor(Math.random() * 1000000) + 1;

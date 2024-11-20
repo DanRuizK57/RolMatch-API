@@ -126,7 +126,7 @@ describe('UserService', () => {
       const userId = 1;
       const user: User = await service.findOne(userId);
 
-      await expect(user).toEqual({ id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '' });
+      expect(user).toEqual({ id: 1, firstName: 'John', lastName: "Doe", email: 'john.doe@example.com', picture: '' });
     });
 
     it('debería retornar un error al enviar un número menor a 1', async () => {
