@@ -36,21 +36,6 @@ describe('GameService', () => {
       players: []
     }),
     Object.assign(new Game(), {
-      id: 2,
-      title: 'Partida 2',
-      description: "Partida 2",
-      duration: '20 mins',
-      date: '31/10/2024',
-      hour: '10:30',
-      latitude: '3232.234334',
-      longitude: '232.4324',
-      playerSlots: '4',
-      totalPlayers: '6',
-      type: Type.Type_1,
-      user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-      players: []
-    }),
-    Object.assign(new Game(), {
         id: 3,
         title: 'Partida 3',
         description: "Partida 3",
@@ -180,7 +165,7 @@ describe('GameService', () => {
 
     it('hay 2 elementos en el array', async () => {
       const result = await service.findAll();
-      expect(result).toHaveLength(3);
+      expect(result).toHaveLength(2);
     });
 
     it('todos los elementos de la lista deben ser instancias de Game', async () => {

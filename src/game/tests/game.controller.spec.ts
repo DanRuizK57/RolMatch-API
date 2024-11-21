@@ -371,19 +371,19 @@ describe('GameController', () => {
       });
 
       it('debería lanzar NotFoundException si la partida no existe', async () => {
-        const gameId = 999; // ID que no existe
+        const gameId = 888; // ID que no existe
 
         const updateGameDto: UpdateGameDto = {
           title: "Partida Modificada",
           description: "Partida Modificada",
-          duration: "50 min",
-          date: "31/10/2024",
-          hour: "16:30",
-          latitude: 223.324324,
-          longitude: 23432.234234,
-          playerSlots: 5,
+          duration: "25 min",
+          date: "27/11/2024",
+          hour: "13:30",
+          latitude: 78223.324324,
+          longitude: 23632.234234,
+          playerSlots: 4,
           totalPlayers: 10,
-          type: Type.Type_2
+          type: Type.Type_1
         };
     
         jest.spyOn(service, 'findOne').mockImplementation(async () => {
