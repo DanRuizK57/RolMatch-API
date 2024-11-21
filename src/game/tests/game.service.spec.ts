@@ -18,6 +18,55 @@ describe('GameService', () => {
   let gameRepository: Repository<Game>;
   let playerRepository: Repository<Player>;
 
+  const mockedGames = [
+    Object.assign(
+      new Game(), {
+      id: 1,
+      title: 'Partida 1',
+      description: "Partida",
+      duration: '30 mins',
+      date: '30/10/2024',
+      hour: '14:30',
+      latitude: '3232.234334',
+      longitude: '232.4324',
+      playerSlots: '4',
+      totalPlayers: '6',
+      type: Type.Type_1,
+      user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
+      players: []
+    }),
+    Object.assign(new Game(), {
+      id: 2,
+      title: 'Partida 2',
+      description: "Partida 2",
+      duration: '20 mins',
+      date: '31/10/2024',
+      hour: '10:30',
+      latitude: '3232.234334',
+      longitude: '232.4324',
+      playerSlots: '4',
+      totalPlayers: '6',
+      type: Type.Type_1,
+      user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
+      players: []
+    }),
+    Object.assign(new Game(), {
+        id: 3,
+        title: 'Partida 3',
+        description: "Partida 3",
+        duration: '50 mins',
+        date: '30/10/2024',
+        hour: '14:30',
+        latitude: '3232.234334',
+        longitude: '232.4324',
+        playerSlots: '4',
+        totalPlayers: '6',
+        type: Type.Type_3,
+        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
+        players: []
+      }),
+  ];
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -38,39 +87,7 @@ describe('GameService', () => {
     playerRepository = module.get<Repository<Player>>(getRepositoryToken(Player));
 
     // Mock del método findAll
-    jest.spyOn(service, 'findAll').mockImplementation(async () => [
-      Object.assign(
-        new Game(), {
-        id: 1,
-        title: 'Partida 1',
-        description: "Partida",
-        duration: '30 mins',
-        date: '30/10/2024',
-        hour: '14:30',
-        latitude: '3232.234334',
-        longitude: '232.4324',
-        playerSlots: '4',
-        totalPlayers: '6',
-        type: Type.Type_1,
-        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-        players: []
-      }),
-      Object.assign(new Game(), {
-        id: 2,
-        title: 'Partida 2',
-        description: "Partida 2",
-        duration: '20 mins',
-        date: '31/10/2024',
-        hour: '10:30',
-        latitude: '3232.234334',
-        longitude: '232.4324',
-        playerSlots: '4',
-        totalPlayers: '6',
-        type: Type.Type_1,
-        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-        players: []
-      }),
-    ]);
+    jest.spyOn(service, 'findAll').mockImplementation(async () => mockedGames);
       
     // Mock del método findOne
     jest.spyOn(service, 'findOne').mockImplementation(async () =>
@@ -158,43 +175,12 @@ describe('GameService', () => {
 
     it('debería retornar un array de partidas', async () => {
       const result = await service.findAll();
-      expect(result).toEqual([
-        {
-        id: 1,
-        title: 'Partida 1',
-        description: "Partida",
-        duration: '30 mins',
-        date: '30/10/2024',
-        hour: '14:30',
-        latitude: '3232.234334',
-        longitude: '232.4324',
-        playerSlots: '4',
-        totalPlayers: '6',
-        type: Type.Type_1,
-        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-        players: []
-      },
-        {
-        id: 2,
-        title: 'Partida 2',
-        description: "Partida 2",
-        duration: '20 mins',
-        date: '31/10/2024',
-        hour: '10:30',
-        latitude: '3232.234334',
-        longitude: '232.4324',
-        playerSlots: '4',
-        totalPlayers: '6',
-        type: Type.Type_1,
-        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-        players: []
-      },
-      ]);
+      expect(result).toEqual(mockedGames);
     });
 
     it('hay 2 elementos en el array', async () => {
       const result = await service.findAll();
-      expect(result).toHaveLength(2);
+      expect(result).toHaveLength(3);
     });
 
     it('todos los elementos de la lista deben ser instancias de Game', async () => {
@@ -269,27 +255,11 @@ describe('GameService', () => {
 
     it('debería retornar todas las partidas con el tipo señalado', async () => {
 
-      const mockedGame: Game = Object.assign(new Game(), {
-        id: 3,
-        title: 'Partida 3',
-        description: "Partida 3",
-        duration: '50 mins',
-        date: '30/10/2024',
-        hour: '14:30',
-        latitude: '3232.234334',
-        longitude: '232.4324',
-        playerSlots: '4',
-        totalPlayers: '6',
-        type: Type.Type_3,
-        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-        players: []
-      });
+      jest.spyOn(service, 'findByType').mockResolvedValue([mockedGames[2]]);
 
-      jest.spyOn(service, 'findByType').mockResolvedValue([mockedGame]);
+      const games = await service.findByType(Type.Type_3);
 
-      const user = await service.findByType(Type.Type_3);
-
-      expect(user).toEqual([mockedGame]);
+      expect(games).toEqual([mockedGames[2]]);
     });
       
     it('debería retornar un array vacío si no se encuentran partidas de ese tipo', async () => {
@@ -307,27 +277,11 @@ describe('GameService', () => {
 
       const owner: User = { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' } as User;
 
-      const mockedGame: Game = Object.assign(new Game(), {
-        id: 3,
-        title: 'Partida 3',
-        description: "Partida 3",
-        duration: '50 mins',
-        date: '30/10/2024',
-        hour: '14:30',
-        latitude: '3232.234334',
-        longitude: '232.4324',
-        playerSlots: '4',
-        totalPlayers: '6',
-        type: Type.Type_3,
-        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-        players: []
-      });
+      jest.spyOn(service, 'findByUser').mockResolvedValue(mockedGames);
 
-      jest.spyOn(service, 'findByUser').mockResolvedValue([mockedGame]);
+      const games = await service.findByUser(owner);
 
-      const user = await service.findByUser(owner);
-
-      expect(user).toEqual([mockedGame]);
+      expect(games).toEqual(mockedGames);
     });
       
     it('debería retornar un array vacío si el usuario no es dueño de ninguna partida', async () => {
@@ -454,27 +408,11 @@ describe('GameService', () => {
 
       const ownerId = 2;
 
-      const mockedGame: Game = Object.assign(new Game(), {
-        id: 3,
-        title: 'Partida 3',
-        description: "Partida 3",
-        duration: '50 mins',
-        date: '30/10/2024',
-        hour: '14:30',
-        latitude: '3232.234334',
-        longitude: '232.4324',
-        playerSlots: '4',
-        totalPlayers: '6',
-        type: Type.Type_3,
-        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-        players: []
-      });
+      jest.spyOn(service, 'findGamesForUser').mockResolvedValue(mockedGames);
 
-      jest.spyOn(service, 'findGamesForUser').mockResolvedValue([mockedGame]);
+      const games = await service.findGamesForUser(ownerId, Type.Type_1);
 
-      const user = await service.findGamesForUser(ownerId, Type.Type_3);
-
-      expect(user).toEqual([mockedGame]);
+      expect(games).toEqual(mockedGames);
     });
       
     it('debería retornar un array vacío si no hay partidas de un usuario y que son de un tip', async () => {

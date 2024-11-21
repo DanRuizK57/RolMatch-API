@@ -2,7 +2,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { GameController } from '../game.controller';
 import { GameService } from '../game.service';
 import { Game } from '../entities/game.entity';
@@ -59,6 +59,21 @@ describe('GameController', () => {
         user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
         players: []
       }),
+      Object.assign(new Game(), {
+          id: 3,
+          title: 'Partida 3',
+          description: "Partida 3",
+          duration: '60 mins',
+          date: '30/11/2024',
+          hour: '12:30',
+          latitude: '31232.234334',
+          longitude: '12232.4324',
+          playerSlots: '2',
+          totalPlayers: '4',
+          type: Type.Type_3,
+          user: { id: 1, firstName: 'Jhon', lastName: "Doe", email: 'jhon.doe@example.com', picture: '' },
+          players: []
+        })
     ];
 
     beforeEach(async () => {
@@ -152,44 +167,12 @@ describe('GameController', () => {
 
             const result = await controller.findAll();
 
-            expect(result).toEqual([
-                Object.assign(
-                    new Game(), {
-                    id: 1,
-                    title: 'Partida',
-                    description: "Partida",
-                    duration: '30 mins',
-                    date: '30/10/2024',
-                    hour: '14:30',
-                    latitude: '3232.234334',
-                    longitude: '232.4324',
-                    playerSlots: '4',
-                    totalPlayers: '6',
-                    type: Type.Type_1,
-                    user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-                    players: []
-                }),
-                Object.assign(new Game(), {
-                    id: 2,
-                    title: 'Partida 2',
-                    description: "Partida 2",
-                    duration: '20 mins',
-                    date: '31/10/2024',
-                    hour: '10:30',
-                    latitude: '3232.234334',
-                    longitude: '232.4324',
-                    playerSlots: '4',
-                    totalPlayers: '6',
-                    type: Type.Type_1,
-                    user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-                    players: []
-                }),
-            ]);
+            expect(result).toEqual(mockedGames);
         });
 
         it('hay 2 elementos en el array', async () => {
             const result = await controller.findAll();
-            expect(result).toHaveLength(2);
+            expect(result).toHaveLength(3);
         });
 
         it('todos los elementos de la lista deben ser instancias de Game', async () => {
@@ -314,39 +297,23 @@ describe('GameController', () => {
 
       it('debería retornar partidas de un usuario y que son de un tipo', async () => {
 
-          const ownerId = 2;
+          const ownerId = 1;
           
           const findGameDto: FindGameDto = {
               id: ownerId,
               type: Type.Type_3
           };
 
-        const mockedGame: Game = Object.assign(new Game(), {
-          id: 3,
-          title: 'Partida 3',
-          description: "Partida 3",
-          duration: '50 mins',
-          date: '30/10/2024',
-          hour: '14:30',
-          latitude: '3232.234334',
-          longitude: '232.4324',
-          playerSlots: '4',
-          totalPlayers: '6',
-          type: Type.Type_3,
-          user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-          players: []
-        });
-
-        jest.spyOn(service, 'findGamesForUser').mockResolvedValue([mockedGame]);
+        jest.spyOn(service, 'findGamesForUser').mockResolvedValue([mockedGames[2]]);
 
         const games = await controller.findGamesForUser(findGameDto);
 
-        expect(games).toEqual([mockedGame]);
+        expect(games).toEqual([mockedGames[2]]);
       });
         
-      it('debería retornar un array vacío si no hay partidas de un usuario y que son de un tip', async () => {
+      it('debería retornar un array vacío si no hay partidas de un usuario y que son de un tipo', async () => {
 
-          const ownerId = 1;
+          const ownerId = 3;
           
           const findGameDto: FindGameDto = {
               id: ownerId,
@@ -381,7 +348,7 @@ describe('GameController', () => {
         const gameId = 4;
 
         const modificatedGame = {
-          id: 4,
+          id: gameId,
           title: "Partida Modificada",
           description: "Partida Modificada",
           duration: "50 min",
@@ -515,7 +482,9 @@ describe('GameController', () => {
       jest.spyOn(service, 'findOne').mockResolvedValue(game);
       jest.spyOn(service, 'getPlayers').mockResolvedValue([existingPlayer]);
 
-      await expect(controller.joinGame(user.id, game.id)).rejects.toThrow(new Error('This player is already in the game!'));
+      await expect(controller.joinGame(user.id, game.id)).rejects.toThrow(
+        new HttpException('This player is already in the game!', HttpStatus.BAD_REQUEST),
+      );
     });
 
     });
@@ -653,17 +622,17 @@ describe('GameController', () => {
         const userId = 2;
 
         const mockedGame: Game = Object.assign(new Game(), {
-          id: 3,
-          title: 'Partida 3',
-          description: "Partida 3",
-          duration: '50 mins',
-          date: '30/10/2024',
-          hour: '14:30',
+          id: 4,
+          title: 'Partida 4',
+          description: "Partida 4",
+          duration: '30 mins',
+          date: '20/11/2024',
+          hour: '12:30',
           latitude: '3232.234334',
-          longitude: '232.4324',
+          longitude: '54232.4324',
           playerSlots: '4',
-          totalPlayers: '6',
-          type: Type.Type_3,
+          totalPlayers: '8',
+          type: Type.Type_1,
           user: { id: 1, firstName: 'Jhon', lastName: "Doe", email: 'jhon.doe@example.com', picture: '' },
           players: [
             { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
@@ -679,7 +648,7 @@ describe('GameController', () => {
         
       it('debería retornar un array vacío si el usuario no se ha unido a ninguna partida', async () => {
 
-        const userId = 3;
+        const userId = 5;
 
         jest.spyOn(service, 'getUserJoinedGames').mockResolvedValueOnce([]);
         const result = await controller.getUserJoinedGames(userId);

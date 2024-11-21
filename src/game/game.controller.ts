@@ -141,10 +141,10 @@ export class GameController {
       }
       return await this.gameService.joinGame(userToJoin, game);
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException || error instanceof HttpException) {
         throw error;
       } else {
-        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new HttpException(`An unexpected error occurred ${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
