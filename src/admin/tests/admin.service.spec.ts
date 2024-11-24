@@ -2,9 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AdminService } from '../admin.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../../user/entities/user.entity';
-import { MoreThan, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 
+/*
+  Pruebas unitarias para verificar el correcto funcionamiento de los métodos del servicio de administración.
+*/
 describe('AdminService', () => {
   let service: AdminService;
   let usersRepository: Repository<User>;

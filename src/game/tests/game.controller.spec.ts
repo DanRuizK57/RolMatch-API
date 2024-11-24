@@ -18,13 +18,10 @@ import { NearestGameDto } from '../dto/nearest-game.dto';
 /*
   Pruebas de integración para verificar el correcto funcionamiento del módulo de partidas.
 */
-
 describe('GameController', () => {
     let controller: GameController;
     let service: GameService;
     let userService: UserService;
-    let gameRepository: Repository<Game>;
-    let playerRepository: Repository<Player>;
 
     const mockedGames = [
         // Se asignan de esta manera para que los detecte como Game y no como Object
