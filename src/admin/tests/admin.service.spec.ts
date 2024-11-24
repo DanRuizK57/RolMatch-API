@@ -116,6 +116,32 @@ describe('AdminService', () => {
       expect(result).toEqual([]);
     });
 
+  });
+  
+  // ############################## Tests para removeReports() ######################################
+  describe('removeReports', () => {
+
+    it('debería restablecer los reportes de un usuario', async () => {
+      const mockReportedUser = { id: 1, reports: 5 } as User;
+      jest.spyOn(usersRepository, 'findOne').mockResolvedValue(mockReportedUser);
+      jest.spyOn(usersRepository, 'save').mockResolvedValue({ ...mockReportedUser, reports: 0 });
+
+      const result = await service.removeReports(mockReportedUser.id);
+
+      expect(result).toEqual({ ...mockReportedUser, reports: 0 });
+    });
+
+    it('debería lanzar NotFoundException si no se encontró al usuario', async () => {
+
+      const userId = 657;
+
+      jest.spyOn(usersRepository, 'findOne').mockResolvedValue(null);
+
+      expect(service.removeReports(userId)).rejects.toThrow(
+        new NotFoundException(`User with the ID ${userId} not found!`),
+      );
+    });
+
    });
   
 });
