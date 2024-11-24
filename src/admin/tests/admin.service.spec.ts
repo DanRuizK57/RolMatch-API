@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AdminService } from '../admin.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../../user/entities/user.entity';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 
 describe('AdminService', () => {
@@ -91,4 +91,31 @@ describe('AdminService', () => {
 
    });
 
+  // ############################## Tests para findAllReported() ######################################
+  describe('findAllReported', () => {
+
+    it('debería retornar todos los usuarios reportados', async () => {
+      const mockReportedUsers = [
+        { id: 1, reports: 5 },
+        { id: 2, reports: 3 },
+        { id: 3, reports: 1 },
+      ] as User[];
+
+      jest.spyOn(usersRepository, 'find').mockResolvedValue(mockReportedUsers);
+
+      const result = await service.findAllReported(1);
+
+      expect(result).toEqual(mockReportedUsers);
+    });
+
+    it('debería retornar una lista vacía si no hay usuarios reportados', async () => {
+      jest.spyOn(usersRepository, 'find').mockResolvedValue([]);
+
+      const result = await service.findAllReported(1);
+
+      expect(result).toEqual([]);
+    });
+
+   });
+  
 });
