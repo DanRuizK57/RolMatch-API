@@ -8,6 +8,7 @@ import { Game } from '../../game/entities/game.entity';
 import { Repository } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { Player } from '../../game/entities/player.entity';
+import { NotFoundException } from '@nestjs/common';
 
 /*
   Pruebas de integración para verificar el correcto funcionamiento del módulo de administración.
@@ -17,6 +18,7 @@ describe('AdminController', () => {
     let service: AdminService;
     let userService: UserService;
     let gameService: GameService;
+    let usersRepository: Repository<User>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -44,6 +46,7 @@ describe('AdminController', () => {
       service = module.get<AdminService>(AdminService);
       userService = module.get<UserService>(UserService);
       gameService = module.get<GameService>(GameService);
+      usersRepository = module.get<Repository<User>>(getRepositoryToken(User));
   });
     
   // ############################## Tests para findAllReported() ######################################
@@ -70,5 +73,30 @@ describe('AdminController', () => {
     });
 
   });
+    
+  // ############################## Tests para removeReports() ######################################
+  describe('removeReports', () => {
+
+      it('debería restablecer los reportes de un usuario', async () => {
+        const mockReportedUser = { id: 1, reports: 5 } as User;
+        jest.spyOn(service, 'removeReports').mockResolvedValue({ ...mockReportedUser, reports: 0 });
+
+        const result = await controller.removeReports(mockReportedUser.id.toString());
+
+        expect(result).toEqual({ ...mockReportedUser, reports: 0 });
+    });
+
+    it('debería lanzar NotFoundException si no se encontró al usuario', async () => {
+
+      const userId = 345;
+
+      jest.spyOn(usersRepository, 'findOne').mockResolvedValue(null);
+
+      expect(controller.removeReports(userId.toString())).rejects.toThrow(
+        new NotFoundException(`User with the ID ${userId} not found!`),
+      );
+    });
+
+   });
 
 });
