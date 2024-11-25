@@ -36,12 +36,9 @@ export class AuthController {
     try {
       // Obtener el token de acceso desde el frontend
       const accessToken = req.headers.authorization;
-      console.log('Access Token:', accessToken);
 
       // Obtener todos los datos de la autenticación
       const googleUser = await this.authService.getUserByToken(accessToken);
-
-      console.log(googleUser);
 
       // Buscar usuario en la base de datos
       const databaseUser = await this.userService.findByEmail(googleUser.email);
@@ -56,12 +53,10 @@ export class AuthController {
 
       // Registrar usuario en la base de datos
       if (!databaseUser) {
-        await this.userService.create(userToSave)
+        await this.userService.create(userToSave);
         const databaseUser = await this.userService.findByEmail(userToSave.email);
-        console.log(databaseUser);
         res.status(200).json(databaseUser);
       }
-      console.log(databaseUser);
       // Devolver el usuario logueado
       res.status(200).json(databaseUser);
 

@@ -11,7 +11,6 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 /*
   Pruebas de integración para verificar el correcto funcionamiento del módulo de usuarios.
 */
-
 describe('UserController', () => {
     let controller: UserController;
     let service: UserService;
