@@ -11,9 +11,9 @@ export class Player {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.players)
+  @ManyToOne(() => User, (user) => user.players, { onDelete: 'CASCADE' })
   user: User;
 
-  @ManyToOne(() => Game, (game) => game.players)
+  @ManyToOne(() => Game, (game) => game.players, { onDelete: 'CASCADE' })
   game: Game;
 }

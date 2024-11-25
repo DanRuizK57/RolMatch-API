@@ -147,17 +147,15 @@ export class GameService {
 
       if (!gameToRemove) throw new NotFoundException(`Game with ID ${id} not found!`);
 
-      const players = await this.playersRepository.find({ where: { game: { id: id } } });
+      const players = await this.playersRepository.find({ where: { game: { id: id } }, relations: ['user'] });
 
       // Saca de la partida a los usuarios que se han unido
-      if (players) {
-        players.forEach((player) => {
-
-          if (!player.user) throw new NotFoundException();
-
-          this.leaveGame(player.user, id);
-        });
+      if (players && players.length > 0) {
+      for (const player of players) {
+        if (!player.user) throw new NotFoundException('Player has no user associated');
+        await this.leaveGame(player.user, id);
       }
+    }
 
       return await this.gamesRepository.remove(gameToRemove);
     } catch (error) {
@@ -181,6 +179,7 @@ export class GameService {
         user: { id: Not(id) },
         type: type
       },
+      relations: ['user']
     });
 
     return games;
@@ -278,13 +277,8 @@ export class GameService {
       const game = await this.findOne(gameId);
       
       // Validar que el usuario y la partida existen
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      if (!game) {
-        throw new NotFoundException('Game not found');
-      }
+      if (!user) throw new NotFoundException('User not found');
+      if (!game) throw new NotFoundException('Game not found');
 
       const playerToRemove = await this.playersRepository.findOne({
         where:
@@ -292,15 +286,13 @@ export class GameService {
       });
 
       // Validar que el jugador existe
-      if (!playerToRemove) {
-        throw new NotFoundException('User is not a player of this game');
-      }
+      if (!playerToRemove) throw new NotFoundException('User is not a player of this game');
 
       // Se libera un slot de la partida
       game.playerSlots++;
 
       // Se actualiza la partida
-      this.gamesRepository.save(game);
+      await this.gamesRepository.save(game);
 
       return this.playersRepository.remove(playerToRemove);
     } catch (error) {
@@ -331,7 +323,7 @@ export class GameService {
 
     for (const game of games) {
       const distance = this.calculateDistance(latitude, longitude, game.latitude, game.longitude);
-      console.log(distance);
+
       if (distance < minDistance) {
         minDistance = distance;
         nearestGame = game;
@@ -349,7 +341,7 @@ export class GameService {
    * @returns Distancia.
    */
   calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    console.log(`lat1: ${lat1}, lon1: ${lon1}, lat2: ${lat2}, lon2: ${lon2}`);
+
     const R = 6371; // Radio de la tierra en km
     const dLat = this.deg2rad(lat2 - lat1);
     const dLon = this.deg2rad(lon2 - lon1);
@@ -359,7 +351,7 @@ export class GameService {
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
-    console.log("D" + distance);
+
     return distance;
   }
 
@@ -401,7 +393,7 @@ export class GameService {
     try {
       const games = await this.findByUser(user);
     
-      if (!games || games.length === 0) throw new NotFoundException('The user has not joined any games yet!');
+      if (!games || games.length === 0) return;
 
       games.forEach(game => {
         this.remove(game.id);
@@ -428,7 +420,7 @@ export class GameService {
         // Se obtienen todos los jugadores de cada partida
         const players = await this.getPlayers(game.id);
 
-        if (players.length < 1) throw new NotFoundException('Players not found!');
+        if (players.length < 1) continue;
 
         for (const player of players) {
           // Si un jugador coincide con el usuario, lo saca

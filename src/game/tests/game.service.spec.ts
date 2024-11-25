@@ -376,7 +376,7 @@ describe('GameService', () => {
       const result = await service.remove(gameId);
 
       expect(service.findOne).toHaveBeenCalledWith(gameId);
-      expect(playerRepository.find).toHaveBeenCalledWith({ where: { game: { id: gameId } } });
+      expect(playerRepository.find).toHaveBeenCalledWith({ where: { game: { id: gameId } }, relations: ['user'] });
       expect(service.leaveGame).toHaveBeenCalledTimes(mockPlayers.length);
       mockPlayers.forEach((player) => {
         expect(service.leaveGame).toHaveBeenCalledWith(player.user, gameId);
@@ -686,14 +686,6 @@ describe('GameService', () => {
     });
   });
 
-    it('debería lanzar NotFoundException si el usuario no ha creado partidas', async () => {
-    const user = new User();
-    jest.spyOn(service, 'findByUser').mockResolvedValue([]);
-
-    await expect(service.removeAllGamesFromUser(user)).rejects.toThrow(NotFoundException);
-    expect(service.findByUser).toHaveBeenCalledWith(user);
-  });
-
   });
 
   // ############################## Tests para leaveAllGames() ########################################
@@ -734,15 +726,6 @@ describe('GameService', () => {
   expect(service.leaveGame).toHaveBeenCalledWith(user, 2); // Verifica la segunda partida
 });
 
-
-  it('debería lanzar NotFoundException si la partida no tiene jugadores', async () => {
-    const games = [{ id: 1 } as Game];
-    jest.spyOn(service, 'findAll').mockResolvedValue(games);
-    jest.spyOn(service, 'getPlayers').mockResolvedValue([]);
-
-    await expect(service.leaveAllGames(new User())).rejects.toThrow(NotFoundException);
-    expect(service.getPlayers).toHaveBeenCalledWith(games[0].id);
-  });
 });
 
 
