@@ -64,6 +64,6 @@ describe('AuthService', () => {
       expect(user).toBeUndefined();
     });
 
-    });
+  });
 
 });

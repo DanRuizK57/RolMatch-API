@@ -6,7 +6,7 @@ import { AuthService } from "../auth.service";
 import { UserService } from "../../user/user.service";
 import { AuthController } from "../auth.controller";
 import { Response } from 'express';
-import * as request from 'supertest';
+import { AccessTokenDto } from "../dto/accessToken.dto";
 
 /*
   Pruebas de integración para verificar el correcto funcionamiento del módulo de autenticación.
@@ -120,6 +120,46 @@ describe('AuthController', () => {
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockDatabaseUser);
+    });
+
+  });
+
+  // ############################## Tests para getUser() ####################################
+  describe('getUser', () => {
+
+    it('debería retornar un usuario', async () => {
+      const accessTokenDto: AccessTokenDto = {
+        accessToken: "validAccessToken2024"
+      }
+      const mockResponse = {
+        data: {
+          sub: '123123',
+          name: 'John Doe',
+          email: 'john.doe@gmail.com',
+        },
+      };
+
+      jest.spyOn(service, 'getUserByToken').mockResolvedValue(mockResponse);
+
+      const response = await controller.getUser(accessTokenDto);
+
+      const user = response.data;
+      
+      expect(user.email).toEqual(mockResponse.data.email);
+    });
+
+    it('debería lanzar un error cuando el token sea inválido', async () => {
+      const accessTokenDto: AccessTokenDto = {
+        accessToken: "invalidAccessToken"
+      }
+
+      jest.spyOn(service, 'getUserByToken').mockRejectedValue(new Error('Failed to get user from Google'));
+
+      try {
+        await controller.getUser(accessTokenDto);
+      } catch (error) {
+        expect(error).toEqual(new Error('Failed to get user from Google'));
+      }
     });
 
   });
