@@ -1,7 +1,7 @@
 import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { AuthService } from './auth.service';
-import { UserService } from '../user/user.service';
+import { AuthService } from '../auth.service';
+import { UserService } from '../../user/user.service';
 
 /*
   Guardián encargado de verificar que la persona que quiera ingresar a una URL protegida
