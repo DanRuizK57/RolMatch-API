@@ -46,7 +46,7 @@ export class Game {
   @ManyToOne(() => User, (user) => user.games)
   user: User;
 
-  @OneToMany(() => Player, (player) => player.user)
+  @OneToMany(() => Player, (player) => player.game, { cascade: true })
   players: Player[];
 
   @CreateDateColumn({ type: 'timestamp' })

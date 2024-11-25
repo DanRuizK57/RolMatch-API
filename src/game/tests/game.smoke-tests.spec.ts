@@ -194,7 +194,7 @@ describe('Pruebas de humo para el módulo de partidas', () => {
           .expect(200);
 
         const games = response.body;
-
+        
       // Se verifica que las partidas pertenezcan al mismo usuario
       games.forEach(game => {
         expect(game.user.id != ownerId).toBe(true);
