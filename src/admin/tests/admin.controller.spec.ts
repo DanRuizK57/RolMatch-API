@@ -20,6 +20,8 @@ describe('AdminController', () => {
     let gameService: GameService;
     let usersRepository: Repository<User>;
 
+    const mockUser = { id: 123 } as User;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminController],
@@ -95,6 +97,28 @@ describe('AdminController', () => {
       expect(controller.removeReports(userId.toString())).rejects.toThrow(
         new NotFoundException(`User with the ID ${userId} not found!`),
       );
+    });
+
+  });
+    
+    // ############################## Tests para remove() ######################################
+  describe('remove', () => {
+
+      it('debería eliminar un usuario exitosamente', async () => {
+        const userId = '123';
+        const mockUser = { id: 123 } as User;
+
+        jest.spyOn(userService, 'findOne').mockResolvedValue(mockUser);
+        jest.spyOn(gameService, 'leaveAllGames').mockResolvedValue(undefined);
+        jest.spyOn(gameService, 'removeAllGamesFromUser').mockResolvedValue(undefined);
+        jest.spyOn(service, 'remove').mockResolvedValue(mockUser);
+
+        const result = await controller.remove(userId);
+
+        expect(userService.findOne).toHaveBeenCalledWith(+userId);
+        expect(gameService.leaveAllGames).toHaveBeenCalledWith(mockUser);
+        expect(gameService.removeAllGamesFromUser).toHaveBeenCalledWith(mockUser);
+        expect(result).toEqual(mockUser);
     });
 
    });
