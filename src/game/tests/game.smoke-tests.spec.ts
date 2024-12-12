@@ -39,7 +39,7 @@ describe('Pruebas de humo para el módulo de partidas', () => {
       longitude: '232.4324',
       playerSlots: 4,
       totalPlayers: 6,
-      type: Type.Type_1,
+      type: Type.DND,
       user: { id: 2, firstName: 'Jane', lastName: 'Doe', email: 'jane.doe@example.com', picture: '' },
       players: [],
     }),
@@ -82,7 +82,7 @@ describe('Pruebas de humo para el módulo de partidas', () => {
       longitude: 23432.234234,
       playerSlots: 5,
       totalPlayers: 10,
-      type: Type.Type_2,
+      type: Type.CTHULHU,
     };
 
     const response = await request(app.getHttpServer())
@@ -108,7 +108,7 @@ describe('Pruebas de humo para el módulo de partidas', () => {
       longitude: 23432.234234,
       playerSlots: 4,
       totalPlayers: 10,
-      type: Type.Type_2,
+      type: Type.CTHULHU,
     };
 
     jest.spyOn(service, 'create').mockResolvedValue(createdGame as Game);
@@ -176,13 +176,13 @@ describe('Pruebas de humo para el módulo de partidas', () => {
         
         const findGameDto: FindGameDto = {
             id: ownerId,
-            type: Type.Type_3
+            type: Type.VARIADO
         };
 
         const mockedGame: Game = Object.assign(new Game(), {
           title: 'Partida de prueba',
           description: "Partida de prueba",
-          type: Type.Type_3,
+          type: Type.VARIADO,
         });
 
         jest.spyOn(service, 'findGamesForUser').mockResolvedValue([mockedGame]);

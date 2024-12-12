@@ -37,7 +37,7 @@ describe('GameController', () => {
         longitude: '232.4324',
         playerSlots: '4',
         totalPlayers: '6',
-        type: Type.Type_1,
+        type: Type.DND,
         user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
         players: []
       }),
@@ -52,7 +52,7 @@ describe('GameController', () => {
         longitude: '232.4324',
         playerSlots: '4',
         totalPlayers: '6',
-        type: Type.Type_1,
+        type: Type.DND,
         user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
         players: []
       }),
@@ -67,7 +67,7 @@ describe('GameController', () => {
           longitude: '12232.4324',
           playerSlots: '2',
           totalPlayers: '4',
-          type: Type.Type_3,
+          type: Type.VARIADO,
           user: { id: 1, firstName: 'Jhon', lastName: "Doe", email: 'jhon.doe@example.com', picture: '' },
           players: []
         })
@@ -126,7 +126,7 @@ describe('GameController', () => {
                 longitude: 23432.234234,
                 playerSlots: 5,
                 totalPlayers: 10,
-                type: Type.Type_2
+                type: Type.CTHULHU
             };
 
             const createdGame = {
@@ -140,7 +140,7 @@ describe('GameController', () => {
                 longitude: 23432.234234,
                 playerSlots: 5,
                 totalPlayers: 10,
-                type: Type.Type_2,
+                type: Type.CTHULHU,
                 user: owner
             };
 
@@ -211,7 +211,7 @@ describe('GameController', () => {
                     longitude: '232.4324',
                     playerSlots: '4',
                     totalPlayers: '6',
-                    type: Type.Type_1,
+                    type: Type.DND,
                     user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
                     players: []
                 }),
@@ -263,7 +263,7 @@ describe('GameController', () => {
           longitude: '232.4324',
           playerSlots: '4',
           totalPlayers: '6',
-          type: Type.Type_3,
+          type: Type.VARIADO,
           user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
           players: []
         });
@@ -298,7 +298,7 @@ describe('GameController', () => {
           
           const findGameDto: FindGameDto = {
               id: ownerId,
-              type: Type.Type_3
+              type: Type.VARIADO
           };
 
         jest.spyOn(service, 'findGamesForUser').mockResolvedValue([mockedGames[2]]);
@@ -314,7 +314,7 @@ describe('GameController', () => {
           
           const findGameDto: FindGameDto = {
               id: ownerId,
-              type: Type.Type_2
+              type: Type.CTHULHU
           };
 
         jest.spyOn(service, 'findGamesForUser').mockResolvedValueOnce([]);
@@ -339,7 +339,7 @@ describe('GameController', () => {
           longitude: 23432.234234,
           playerSlots: 5,
           totalPlayers: 10,
-          type: Type.Type_2
+          type: Type.CTHULHU
         };
 
         const gameId = 4;
@@ -355,7 +355,7 @@ describe('GameController', () => {
           longitude: 23432.234234,
           playerSlots: 5,
           totalPlayers: 10,
-          type: Type.Type_2,
+          type: Type.CTHULHU,
           user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
           players: []
         };
@@ -380,7 +380,7 @@ describe('GameController', () => {
           longitude: 23632.234234,
           playerSlots: 4,
           totalPlayers: 10,
-          type: Type.Type_1
+          type: Type.DND
         };
     
         jest.spyOn(service, 'findOne').mockImplementation(async () => {
@@ -583,7 +583,7 @@ describe('GameController', () => {
       
       const nearestGameDto: NearestGameDto = {
         id: 1,
-        type: Type.Type_1,
+        type: Type.DND,
         latitude: 40.712776,
         longitude: -74.005974,
       };
@@ -629,7 +629,7 @@ describe('GameController', () => {
           longitude: '54232.4324',
           playerSlots: '4',
           totalPlayers: '8',
-          type: Type.Type_1,
+          type: Type.DND,
           user: { id: 1, firstName: 'Jhon', lastName: "Doe", email: 'jhon.doe@example.com', picture: '' },
           players: [
             { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },

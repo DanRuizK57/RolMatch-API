@@ -31,7 +31,7 @@ describe('GameService', () => {
       longitude: '232.4324',
       playerSlots: '4',
       totalPlayers: '6',
-      type: Type.Type_1,
+      type: Type.DND,
       user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
       players: []
     }),
@@ -46,7 +46,7 @@ describe('GameService', () => {
         longitude: '232.4324',
         playerSlots: '4',
         totalPlayers: '6',
-        type: Type.Type_3,
+        type: Type.VARIADO,
         user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
         players: []
       }),
@@ -87,7 +87,7 @@ describe('GameService', () => {
         longitude: 232.4324,
         playerSlots: 4,
         totalPlayers: 6,
-        type: Type.Type_1,
+        type: Type.DND,
         user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
         players: [
           {
@@ -129,7 +129,7 @@ describe('GameService', () => {
         longitude: 23432.234234,
         playerSlots: 5,
         totalPlayers: 10,
-        type: Type.Type_2
+        type: Type.CTHULHU
       };
 
       const createdGame = {
@@ -143,7 +143,7 @@ describe('GameService', () => {
         longitude: 23432.234234,
         playerSlots: 5,
         totalPlayers: 10,
-        type: Type.Type_2
+        type: Type.CTHULHU
       };
 
       jest.spyOn(service, 'create').mockResolvedValue(createdGame as Game);
@@ -200,7 +200,7 @@ describe('GameService', () => {
         longitude: 232.4324,
         playerSlots: 4,
         totalPlayers: 6,
-        type: Type.Type_1,
+        type: Type.DND,
         user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
         players: [
           {
@@ -242,14 +242,14 @@ describe('GameService', () => {
 
       jest.spyOn(service, 'findByType').mockResolvedValue([mockedGames[2]]);
 
-      const games = await service.findByType(Type.Type_3);
+      const games = await service.findByType(Type.VARIADO);
 
       expect(games).toEqual([mockedGames[2]]);
     });
       
     it('debería retornar un array vacío si no se encuentran partidas de ese tipo', async () => {
       jest.spyOn(service, 'findByType').mockResolvedValueOnce([]);
-      const result = await service.findByType(Type.Type_2);
+      const result = await service.findByType(Type.CTHULHU);
       expect(result).toEqual([]);
     });
 
@@ -298,7 +298,7 @@ describe('GameService', () => {
         longitude: 23432.234234,
         playerSlots: 5,
         totalPlayers: 10,
-        type: Type.Type_2,
+        type: Type.CTHULHU,
         user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
         players: []
       };
@@ -323,7 +323,7 @@ describe('GameService', () => {
         longitude: 23432.234234,
         playerSlots: 5,
         totalPlayers: 10,
-        type: Type.Type_2
+        type: Type.CTHULHU
       };
    
       jest.spyOn(service, 'findOne').mockImplementation(async () => {
@@ -395,7 +395,7 @@ describe('GameService', () => {
 
       jest.spyOn(service, 'findGamesForUser').mockResolvedValue(mockedGames);
 
-      const games = await service.findGamesForUser(ownerId, Type.Type_1);
+      const games = await service.findGamesForUser(ownerId, Type.DND);
 
       expect(games).toEqual(mockedGames);
     });
@@ -405,7 +405,7 @@ describe('GameService', () => {
       const ownerId = 1;
 
       jest.spyOn(service, 'findGamesForUser').mockResolvedValueOnce([]);
-      const result = await service.findGamesForUser(ownerId, Type.Type_2);
+      const result = await service.findGamesForUser(ownerId, Type.CTHULHU);
       expect(result).toEqual([]);
     });
 
@@ -588,32 +588,32 @@ describe('GameService', () => {
           return Infinity;
         });
 
-      const result = await service.findNearestGame(99, Type.Type_1, 40.7128, -74.0060);
+      const result = await service.findNearestGame(99, Type.DND, 40.7128, -74.0060);
 
       expect(result).toEqual(games[1]);
       expect(gameRepository.find).toHaveBeenCalledWith({
         where: {
           user: { id: expect.not.stringContaining('99') },
-          type: Type.Type_1,
+          type: Type.DND,
         },
       });
     });
 
     it('debería filtrar las partidas por el ID de usuario y por el tipo', async () => {
       const games = [
-        { id: 2, user: { id: 3 }, latitude: 40.712776, longitude: -74.005974, type: Type.Type_2 } as Game,
+        { id: 2, user: { id: 3 }, latitude: 40.712776, longitude: -74.005974, type: Type.CTHULHU } as Game,
       ];
 
       jest.spyOn(gameRepository, 'find').mockResolvedValue(games);
       jest.spyOn(service, 'calculateDistance').mockReturnValue(5.0);
 
-      const result = await service.findNearestGame(1, Type.Type_2, 40.7128, -74.0060);
+      const result = await service.findNearestGame(1, Type.CTHULHU, 40.7128, -74.0060);
 
       expect(result).toEqual(games[0]);
       expect(gameRepository.find).toHaveBeenCalledWith({
         where: {
           user: { id: expect.not.stringContaining('1') },
-          type: Type.Type_2,
+          type: Type.CTHULHU,
         },
       });
     });
@@ -638,7 +638,7 @@ describe('GameService', () => {
         longitude: '232.4324',
         playerSlots: '4',
         totalPlayers: '6',
-        type: Type.Type_3,
+        type: Type.VARIADO,
         user: { id: 1, firstName: 'Jhon', lastName: "Doe", email: 'jhon.doe@example.com', picture: '' },
         players: [
           { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
