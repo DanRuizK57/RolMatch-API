@@ -46,7 +46,7 @@ describe('GameService', () => {
         longitude: '232.4324',
         playerSlots: '4',
         totalPlayers: '6',
-        type: Type.VARIADO,
+        type: Type.OTRO,
         user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
         players: []
       }),
@@ -242,7 +242,7 @@ describe('GameService', () => {
 
       jest.spyOn(service, 'findByType').mockResolvedValue([mockedGames[2]]);
 
-      const games = await service.findByType(Type.VARIADO);
+      const games = await service.findByType(Type.OTRO);
 
       expect(games).toEqual([mockedGames[2]]);
     });
@@ -638,7 +638,7 @@ describe('GameService', () => {
         longitude: '232.4324',
         playerSlots: '4',
         totalPlayers: '6',
-        type: Type.VARIADO,
+        type: Type.OTRO,
         user: { id: 1, firstName: 'Jhon', lastName: "Doe", email: 'jhon.doe@example.com', picture: '' },
         players: [
           { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },

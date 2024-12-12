@@ -4,5 +4,5 @@
 export enum Type {
     DND = 'DnD',
     CTHULHU = 'Cthulhu',
-    VARIADO = 'Variado',
+    OTRO = 'Otro',
 }

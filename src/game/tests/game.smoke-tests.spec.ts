@@ -176,13 +176,13 @@ describe('Pruebas de humo para el módulo de partidas', () => {
         
         const findGameDto: FindGameDto = {
             id: ownerId,
-            type: Type.VARIADO
+            type: Type.OTRO
         };
 
         const mockedGame: Game = Object.assign(new Game(), {
           title: 'Partida de prueba',
           description: "Partida de prueba",
-          type: Type.VARIADO,
+          type: Type.OTRO,
         });
 
         jest.spyOn(service, 'findGamesForUser').mockResolvedValue([mockedGame]);

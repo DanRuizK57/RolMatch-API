@@ -62,7 +62,7 @@ describe('Pruebas de humo para el módulo de administración', () => {
         longitude: 64232.4324,
         playerSlots: 5,
         totalPlayers: 10,
-        type: Type.VARIADO,
+        type: Type.OTRO,
         user: user,
         players: []
     });

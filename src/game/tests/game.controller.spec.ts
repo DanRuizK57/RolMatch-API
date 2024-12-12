@@ -67,7 +67,7 @@ describe('GameController', () => {
           longitude: '12232.4324',
           playerSlots: '2',
           totalPlayers: '4',
-          type: Type.VARIADO,
+          type: Type.OTRO,
           user: { id: 1, firstName: 'Jhon', lastName: "Doe", email: 'jhon.doe@example.com', picture: '' },
           players: []
         })
@@ -263,7 +263,7 @@ describe('GameController', () => {
           longitude: '232.4324',
           playerSlots: '4',
           totalPlayers: '6',
-          type: Type.VARIADO,
+          type: Type.OTRO,
           user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
           players: []
         });
@@ -298,7 +298,7 @@ describe('GameController', () => {
           
           const findGameDto: FindGameDto = {
               id: ownerId,
-              type: Type.VARIADO
+              type: Type.OTRO
           };
 
         jest.spyOn(service, 'findGamesForUser').mockResolvedValue([mockedGames[2]]);
