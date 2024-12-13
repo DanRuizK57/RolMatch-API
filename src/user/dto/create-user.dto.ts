@@ -1,4 +1,4 @@
-import { IsEmail, IsString } from "class-validator";
+import { IsEmail, IsOptional, IsString } from "class-validator";
 
 /*
   Clase que representa los valores obligatorios que se deben obtener para crear un usuario.
@@ -16,4 +16,8 @@ export class CreateUserDto {
 
     @IsString()
     picture: string;
+  
+    @IsOptional()
+    @IsString()
+    role?: string;
 }
