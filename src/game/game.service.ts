@@ -71,12 +71,10 @@ export class GameService {
    */
   async findOne(id: number): Promise<Game> {
     try {
-      if (isNaN(id)) throw new BadRequestException('ID must be a number!');
-
       if (id <= 0) throw new BadRequestException('ID must be greather than 0!');
 
       const game = await this.gamesRepository.findOne({ where: { id } });
-
+      
       if (!game) throw new NotFoundException(`Game with ID ${id} not found!`);
 
       return game;
@@ -84,7 +82,7 @@ export class GameService {
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       } else {
-        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new HttpException(`An unexpected error occurred: ${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -299,7 +297,7 @@ export class GameService {
       if (error instanceof NotFoundException) {
         throw error;
       } else {
-        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new HttpException(`An unexpected error occurred: ${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
 

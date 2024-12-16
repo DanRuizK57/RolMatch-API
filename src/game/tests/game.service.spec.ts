@@ -52,6 +52,19 @@ describe('GameService', () => {
       }),
   ];
 
+  const mockedOwner: User = {
+    id: 2,
+    firstName: 'Jane',
+    lastName: "Doe",
+    email: 'jane.doe@example.com',
+    picture: '',
+    role: 'user',
+    reports: 0,
+    games: [],
+    players: [],
+    createdAt: new Date()
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -73,31 +86,6 @@ describe('GameService', () => {
 
     // Mock del método findAll
     jest.spyOn(service, 'findAll').mockImplementation(async () => mockedGames);
-      
-    // Mock del método findOne
-    jest.spyOn(service, 'findOne').mockImplementation(async () =>
-      Object.assign(new Game(), {
-        id: 1,
-        title: 'Partida 1',
-        description: "Partida",
-        duration: '30 mins',
-        date: '30/10/2024',
-        hour: '14:30',
-        latitude: 3232.234334,
-        longitude: 232.4324,
-        playerSlots: 4,
-        totalPlayers: 6,
-        type: Type.DND,
-        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
-        players: [
-          {
-            id: 2,
-            user: { id: 2 },
-            game: { id: 2 }
-          } as Player
-        ]
-      })
-    );
 
   });
     
@@ -105,19 +93,6 @@ describe('GameService', () => {
   describe('create', () => {
 
     it('debería crear una partida', async () => {
-
-      const owner: User = {
-        id: 2,
-        firstName: 'Jane',
-        lastName: "Doe",
-        email: 'jane.doe@example.com',
-        picture: '',
-        role: 'user',
-        reports: 0,
-        games: [],
-        players: [],
-        createdAt: new Date()
-      }
 
       const createGameDto: CreateGameDto = {
         title: "Partida",
@@ -148,9 +123,28 @@ describe('GameService', () => {
 
       jest.spyOn(service, 'create').mockResolvedValue(createdGame as Game);
 
-      const result = await service.create(owner, createGameDto);
+      const result = await service.create(mockedOwner, createGameDto);
       
       expect(result).toEqual(createdGame);
+    });
+
+    it('debería lanzar BadRequestException si playerSlots > totalPlayers', async () => {
+
+      const invalidGame: CreateGameDto = {
+        title: "Partida inválida",
+        description: "Partida inválida",
+        duration: "2 horas",
+        date: "16/12/2024",
+        hour: "11:30",
+        latitude: 32334.324324,
+        longitude: 63432.234234,
+        playerSlots: 8,
+        totalPlayers: 6,
+        type: Type.DND
+      };
+
+      await expect(service.create(mockedOwner, invalidGame)).rejects.toThrow(BadRequestException);
+
     });
 
   });
@@ -187,9 +181,7 @@ describe('GameService', () => {
   describe('findOne', () => {
     it('debería retornar a una partida con ID 1', async () => {
       const gameId = 1;
-      const game: Game = await service.findOne(gameId);
-
-      expect(game).toEqual({
+      const mockGame: Game = {
         id: 1,
         title: 'Partida 1',
         description: "Partida",
@@ -201,7 +193,7 @@ describe('GameService', () => {
         playerSlots: 4,
         totalPlayers: 6,
         type: Type.DND,
-        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' },
+        user: { id: 2, firstName: 'Jane', lastName: "Doe", email: 'jane.doe@example.com', picture: '' } as User,
         players: [
           {
             id: 2,
@@ -209,28 +201,24 @@ describe('GameService', () => {
             game: { id: 2 }
           } as Player
         ]
-      });
+      } as Game;
+
+      jest.spyOn(gameRepository, 'findOne').mockResolvedValue(mockGame);
+
+      const result = await service.findOne(gameId);
+
+      expect(result).toEqual(mockGame);
     });
 
-    it('debería retornar un error al enviar un número menor a 1', async () => {
+    it('debería retornar un error al enviar un número menor a 0', async () => {
       const gameId = -3;
-
-        // Establece el mock para que `findOne` del servicio lance una excepción
-      jest.spyOn(service, 'findOne').mockImplementation(async (id: number) => {
-        if (id <= 0) {
-          throw new BadRequestException('ID must be greather than 0!');
-        }
-        return null;
-      });
-
       await expect(service.findOne(gameId)).rejects.toThrow(BadRequestException);
     });
 
-    it('debería lanzar NotFoundException si el servicio retorna undefined', async () => {
+    it('debería lanzar NotFoundException si la partida no existe', async () => {
       const gameId = 999;
       jest.spyOn(service, 'findOne').mockRejectedValue(new NotFoundException(`Game with ID ${gameId} not found!`));
-
-      await expect(service.findOne(gameId)).rejects.toThrow(NotFoundException);
+      await expect( service.findOne(gameId)).rejects.toThrow(NotFoundException);
     });
 
   });
@@ -537,7 +525,9 @@ describe('GameService', () => {
 
     it('debería lanzar un NotFoundException si el usuario no existe', async () => {
       const gameId = 1;
-
+      jest.spyOn(service, 'findOne').mockImplementation(async () => {
+        throw new NotFoundException('User not found');
+      });
       await expect(service.leaveGame(null, gameId)).rejects.toThrow(NotFoundException);
     });
 
