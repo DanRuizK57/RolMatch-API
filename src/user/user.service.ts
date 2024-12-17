@@ -58,7 +58,6 @@ export class UserService {
    */
   async findOne(id: number): Promise<User> {
     try {
-      if (isNaN(id)) throw new BadRequestException('ID must be a number!');
 
       if (id <= 0) throw new BadRequestException('ID must be greather than 0!');
 
@@ -71,7 +70,7 @@ export class UserService {
       if (error instanceof BadRequestException || error instanceof NotFoundException) {
         throw error;
       } else {
-        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new HttpException(`An unexpected error occurred: ${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -92,7 +91,7 @@ export class UserService {
       if (error instanceof NotFoundException) {
         throw error;
       } else {
-        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new HttpException(`An unexpected error occurred: ${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }

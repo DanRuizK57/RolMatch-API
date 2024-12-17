@@ -9,14 +9,12 @@ import { User } from "../../user/entities/user.entity";
 import { Player } from "../entities/player.entity";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { UpdateGameDto } from "../dto/update-game.dto";
-import { UserService } from "../../user/user.service";
 
 /*
   Pruebas unitarias para verificar el correcto funcionamiento de los métodos del servicio de partidas.
 */
 describe('GameService', () => {
   let service: GameService;
-  let userService: UserService;
   let gameRepository: Repository<Game>;
   let playerRepository: Repository<Player>;
 
@@ -71,7 +69,6 @@ describe('GameService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GameService,
-        UserService,
         {
           provide: getRepositoryToken(Game),
           useClass: Repository,
@@ -80,15 +77,10 @@ describe('GameService', () => {
           provide: getRepositoryToken(Player),
           useClass: Repository,
         },
-        {
-          provide: getRepositoryToken(User),
-          useClass: Repository,
-        },
       ],
     }).compile();
 
     service = module.get<GameService>(GameService);
-    userService = module.get<UserService>(UserService);
     gameRepository = module.get<Repository<Game>>(getRepositoryToken(Game));
     playerRepository = module.get<Repository<Player>>(getRepositoryToken(Player));
 
