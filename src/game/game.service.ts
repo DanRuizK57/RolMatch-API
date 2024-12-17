@@ -129,7 +129,7 @@ export class GameService {
       if (error instanceof NotFoundException) {
         throw error;
       } else {
-        throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new HttpException(`An unexpected error occurred: ${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
   }

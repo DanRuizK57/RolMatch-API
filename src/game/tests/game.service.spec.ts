@@ -9,12 +9,14 @@ import { User } from "../../user/entities/user.entity";
 import { Player } from "../entities/player.entity";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { UpdateGameDto } from "../dto/update-game.dto";
+import { UserService } from "../../user/user.service";
 
 /*
   Pruebas unitarias para verificar el correcto funcionamiento de los métodos del servicio de partidas.
 */
 describe('GameService', () => {
   let service: GameService;
+  let userService: UserService;
   let gameRepository: Repository<Game>;
   let playerRepository: Repository<Player>;
 
@@ -69,6 +71,7 @@ describe('GameService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GameService,
+        UserService,
         {
           provide: getRepositoryToken(Game),
           useClass: Repository,
@@ -77,10 +80,15 @@ describe('GameService', () => {
           provide: getRepositoryToken(Player),
           useClass: Repository,
         },
+        {
+          provide: getRepositoryToken(User),
+          useClass: Repository,
+        },
       ],
     }).compile();
 
     service = module.get<GameService>(GameService);
+    userService = module.get<UserService>(UserService);
     gameRepository = module.get<Repository<Game>>(getRepositoryToken(Game));
     playerRepository = module.get<Repository<Player>>(getRepositoryToken(Player));
 
@@ -299,24 +307,11 @@ describe('GameService', () => {
     });
 
     it('debería lanzar NotFoundException si la partida no existe', async () => {
-      const gameId = 999; // ID que no existe
+      const gameId = 999;
 
-      const updateGameDto: UpdateGameDto = {
-        title: "Partida Modificada",
-        description: "Partida Modificada",
-        duration: "50 min",
-        date: "31/10/2024",
-        hour: "16:30",
-        latitude: 223.324324,
-        longitude: 23432.234234,
-        playerSlots: 5,
-        totalPlayers: 10,
-        type: Type.CTHULHU
-      };
-   
-      jest.spyOn(gameRepository, 'findOne').mockResolvedValueOnce(undefined);
-   
-      await expect(service.update(gameId, updateGameDto)).rejects.toThrow(NotFoundException);
+      jest.spyOn(service, 'findOne').mockResolvedValueOnce(undefined);
+
+      await expect(service.update(gameId, {} as UpdateGameDto)).rejects.toThrow(NotFoundException); 
    });
 
   });
@@ -337,7 +332,7 @@ describe('GameService', () => {
     it('debería lanzar NotFoundException si la partida no existe', async () => {
       const gameId = 999; // ID que no existe
    
-      jest.spyOn(gameRepository, 'findOne').mockResolvedValueOnce(undefined);
+      jest.spyOn(service, 'findOne').mockResolvedValueOnce(undefined);
    
       await expect(service.remove(gameId)).rejects.toThrow(NotFoundException);
    });
@@ -488,7 +483,8 @@ describe('GameService', () => {
 
     it('debería lanzar NotFoundException si el servicio retorna undefined', async () => {
       const gameId = 999;
-      jest.spyOn(service, 'getPlayers').mockRejectedValue(new NotFoundException(`Game with ID ${gameId} not found!`));
+
+      jest.spyOn(service, 'findOne').mockResolvedValueOnce(undefined);
 
       await expect(service.getPlayers(gameId)).rejects.toThrow(NotFoundException);
     });
@@ -521,9 +517,7 @@ describe('GameService', () => {
 
     it('debería lanzar un NotFoundException si el usuario no existe', async () => {
       const gameId = 1;
-      jest.spyOn(service, 'findOne').mockImplementation(async () => {
-        throw new NotFoundException('User not found');
-      });
+      jest.spyOn(service, 'findOne').mockResolvedValueOnce(undefined);
       await expect(service.leaveGame(null, gameId)).rejects.toThrow(NotFoundException);
     });
 
@@ -532,9 +526,7 @@ describe('GameService', () => {
 
       const gameId = 999;
 
-      jest.spyOn(service, 'findOne').mockImplementation(async () => {
-        throw new NotFoundException(`Game with ID ${gameId} not found!`);
-      });
+      jest.spyOn(service, 'findOne').mockResolvedValueOnce(undefined);
 
       await expect(service.leaveGame(user, gameId)).rejects.toThrow(NotFoundException);
     });
