@@ -217,8 +217,8 @@ describe('GameService', () => {
 
     it('debería lanzar NotFoundException si la partida no existe', async () => {
       const gameId = 999;
-      jest.spyOn(service, 'findOne').mockRejectedValue(new NotFoundException(`Game with ID ${gameId} not found!`));
-      await expect( service.findOne(gameId)).rejects.toThrow(NotFoundException);
+      jest.spyOn(gameRepository, 'findOne').mockResolvedValueOnce(undefined);
+      await expect(service.findOne(gameId)).rejects.toThrow(NotFoundException);
     });
 
   });
@@ -228,7 +228,7 @@ describe('GameService', () => {
 
     it('debería retornar todas las partidas con el tipo señalado', async () => {
 
-      jest.spyOn(service, 'findByType').mockResolvedValue([mockedGames[2]]);
+      jest.spyOn(gameRepository, 'find').mockResolvedValue([mockedGames[2]]);
 
       const games = await service.findByType(Type.OTRO);
 
@@ -236,7 +236,7 @@ describe('GameService', () => {
     });
       
     it('debería retornar un array vacío si no se encuentran partidas de ese tipo', async () => {
-      jest.spyOn(service, 'findByType').mockResolvedValueOnce([]);
+      jest.spyOn(gameRepository, 'find').mockResolvedValueOnce([]);
       const result = await service.findByType(Type.CTHULHU);
       expect(result).toEqual([]);
     });
@@ -314,11 +314,9 @@ describe('GameService', () => {
         type: Type.CTHULHU
       };
    
-      jest.spyOn(service, 'findOne').mockImplementation(async () => {
-        throw new NotFoundException(`Game with ID ${gameId} not found!`);
-      });
+      jest.spyOn(gameRepository, 'findOne').mockResolvedValueOnce(undefined);
    
-      await expect(service.update(gameId, updateGameDto)).rejects.toThrow(new NotFoundException(`Game with ID ${gameId} not found!`));
+      await expect(service.update(gameId, updateGameDto)).rejects.toThrow(NotFoundException);
    });
 
   });
@@ -339,11 +337,9 @@ describe('GameService', () => {
     it('debería lanzar NotFoundException si la partida no existe', async () => {
       const gameId = 999; // ID que no existe
    
-      jest.spyOn(service, 'findOne').mockImplementation(async () => {
-        throw new NotFoundException(`Game with ID ${gameId} not found!`);
-      });
+      jest.spyOn(gameRepository, 'findOne').mockResolvedValueOnce(undefined);
    
-      await expect(service.remove(gameId)).rejects.toThrow(new NotFoundException(`Game with ID ${gameId} not found!`));
+      await expect(service.remove(gameId)).rejects.toThrow(NotFoundException);
    });
 
    it('debería eliminar todos los jugadores asociados a la partida', async () => {
