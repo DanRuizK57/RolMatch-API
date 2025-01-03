@@ -16,7 +16,7 @@ export class CreateGameDto {
   @IsString()
   duration: string;
 
-  @MinLength(9)
+  @MinLength(8)
   @MaxLength(10)
   @IsString()
   date: string;

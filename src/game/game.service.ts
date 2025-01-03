@@ -74,7 +74,7 @@ export class GameService {
       if (id <= 0) throw new BadRequestException('ID must be greather than 0!');
 
       const game = await this.gamesRepository.findOne({ where: { id } });
-      
+
       if (!game) throw new NotFoundException(`Game with ID ${id} not found!`);
 
       return game;
@@ -149,11 +149,11 @@ export class GameService {
 
       // Saca de la partida a los usuarios que se han unido
       if (players && players.length > 0) {
-      for (const player of players) {
-        if (!player.user) throw new NotFoundException('Player has no user associated');
-        await this.leaveGame(player.user, id);
+        for (const player of players) {
+          if (!player.user) throw new NotFoundException('Player has no user associated');
+          await this.leaveGame(player.user, id);
+        }
       }
-    }
 
       return await this.gamesRepository.remove(gameToRemove);
     } catch (error) {
@@ -190,49 +190,49 @@ export class GameService {
    * @returns Jugador creado.
    */
   async joinGame(user: User, game: Game): Promise<Player> {
-  try {
-    // Validar que el usuario y la partida existen
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    if (!game) {
-      throw new NotFoundException('Game not found');
-    }
-
-    // Verificar si hay slots disponibles en el juego
-    if (game.playerSlots <= 0) {
-      throw new HttpException('The player slots of this game are full!', HttpStatus.BAD_REQUEST);
-    }
-
-    const players = await this.getPlayers(game.id);
-
-    // Verificar si el usuario ya está en el juego
-    players.forEach(player => {
-      if (player.user.id === user.id) {
-        throw new HttpException('This player is already in the game!', HttpStatus.BAD_REQUEST);
+    try {
+      // Validar que el usuario y la partida existen
+      if (!user) {
+        throw new NotFoundException('User not found');
       }
-    });
+      if (!game) {
+        throw new NotFoundException('Game not found');
+      }
 
-    const player = new Player();
-    player.user = user;
-    player.game = game;
+      // Verificar si hay slots disponibles en el juego
+      if (game.playerSlots <= 0) {
+        throw new HttpException('The player slots of this game are full!', HttpStatus.BAD_REQUEST);
+      }
 
-    // Ocupa un slot libre en la partida
-    game.playerSlots--;
+      const players = await this.getPlayers(game.id);
 
-    // Actualiza la partida
-    await this.gamesRepository.save(game);
+      // Verificar si el usuario ya está en el juego
+      players.forEach(player => {
+        if (player.user.id === user.id) {
+          throw new HttpException('This player is already in the game!', HttpStatus.BAD_REQUEST);
+        }
+      });
 
-    // Guarda y retorna el nuevo jugador
-    return await this.playersRepository.save(player);
-  } catch (error) {
-    if (error instanceof NotFoundException || error instanceof HttpException) {
-      throw error;
-    } else {
-      throw new HttpException(`An unexpected error occurred: ${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      const player = new Player();
+      player.user = user;
+      player.game = game;
+
+      // Ocupa un slot libre en la partida
+      game.playerSlots--;
+
+      // Actualiza la partida
+      await this.gamesRepository.save(game);
+
+      // Guarda y retorna el nuevo jugador
+      return await this.playersRepository.save(player);
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new HttpException(`An unexpected error occurred: ${error}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
-}
 
   /**
    * Obtiene todos los jugadores de una partida.
@@ -256,7 +256,7 @@ export class GameService {
       return players;
     } catch (error) {
       if (error instanceof NotFoundException) {
-          throw error;
+        throw error;
       } else {
         throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
       }
@@ -273,7 +273,7 @@ export class GameService {
 
     try {
       const game = await this.findOne(gameId);
-      
+
       // Validar que el usuario y la partida existen
       if (!user) throw new NotFoundException('User not found');
       if (!game) throw new NotFoundException('Game not found');
@@ -311,7 +311,7 @@ export class GameService {
   async findNearestGame(id: number, type: Type, latitude: number, longitude: number): Promise<Game> {
     const games = await this.gamesRepository.find({
       where: {
-        user: { id: id },
+        user: { id: Not(id) },
         type: type
       },
     });
@@ -374,12 +374,12 @@ export class GameService {
       },
       relations: ['game'],
     });
- 
+
     let playerGames = []
-      players.forEach(player => {
+    players.forEach(player => {
       playerGames.push(player.game)
     });
-    
+
     return playerGames;
   }
 
@@ -390,7 +390,7 @@ export class GameService {
   async removeAllGamesFromUser(user: User) {
     try {
       const games = await this.findByUser(user);
-    
+
       if (!games || games.length === 0) return;
 
       games.forEach(game => {
